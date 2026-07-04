@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx shadcn@latest add @efferd/app-shell-2 --yes)",
+      "Bash(echo \"exit=$?\")",
+      "Bash(bunx shadcn@latest add @efferd/app-shell-2 --yes)",
+      "Bash(ls -la .env*)",
+      "Read(//home/user/app/**)",
+      "Read(//home/user/**)",
+      "Read(//home/user/components/**)",
+      "Bash(bun run:*)",
+      "Bash(npx tsc:*)"
+    ]
+  }
+}

@@ -1,0 +1,42 @@
+[
+  { "id": "national-emergency-999", "name": "National Emergency Service", "organization": "Bangladesh Police", "division": "Dhaka", "district": "Dhaka", "phone": "999", "type": "government", "available24h": true },
+  { "id": "dghs-hotline-16401", "name": "DGHS Health Hotline", "organization": "Directorate General of Health Services", "division": "Dhaka", "district": "Dhaka", "phone": "16401", "type": "government", "available24h": true },
+  { "id": "fire-service-16163", "name": "Fire Service & Civil Defence", "organization": "Bangladesh Fire Service", "division": "Dhaka", "district": "Dhaka", "phone": "16163", "type": "government", "available24h": true },
+
+  { "id": "dmch-ambulance", "name": "Dhaka Medical College Ambulance", "organization": "DMCH", "division": "Dhaka", "district": "Dhaka", "phone": "+880255486381", "type": "government", "available24h": true },
+  { "id": "square-ambulance", "name": "Square Hospital Ambulance", "organization": "Square Hospital", "division": "Dhaka", "district": "Dhaka", "phone": "+880281514450", "type": "private", "available24h": true },
+  { "id": "apollo-ambulance", "name": "Apollo Hospitals Ambulance", "organization": "Apollo Hospitals Dhaka", "division": "Dhaka", "district": "Dhaka", "phone": "+880284166122", "type": "private", "available24h": true },
+  { "id": "united-ambulance", "name": "United Hospital Ambulance", "organization": "United Hospital", "division": "Dhaka", "district": "Dhaka", "phone": "+880288396400", "type": "private", "available24h": true },
+  { "id": "evercare-ambulance", "name": "Evercare Hospital Ambulance", "organization": "Evercare Hospital Dhaka", "division": "Dhaka", "district": "Dhaka", "phone": "+880288367111", "type": "private", "available24h": true },
+  { "id": "gonoshasthaya-ambulance", "name": "Gonoshasthaya Kendra Ambulance", "organization": "GK", "division": "Dhaka", "district": "Dhaka", "phone": "+8801777770000", "type": "ngo", "available24h": true },
+  { "id": "brac-ambulance", "name": "BRAC Ambulance Service", "organization": "BRAC", "division": "Dhaka", "district": "Gazipur", "phone": "+88028811250", "type": "ngo", "available24h": false },
+  { "id": "narayanganj-general-amb", "name": "Narayanganj General Hospital Ambulance", "organization": "NGH", "division": "Dhaka", "district": "Narayanganj", "phone": "+88027631432", "type": "government", "available24h": true },
+  { "id": "tangail-medical-amb", "name": "Tangail Medical College Ambulance", "organization": "TMCH", "division": "Dhaka", "district": "Tangail", "phone": "+88092161311", "type": "government", "available24h": false },
+
+  { "id": "cmch-ambulance", "name": "Chattogram Medical College Ambulance", "organization": "CMCH", "division": "Chattogram", "district": "Chattogram", "phone": "+88031616400", "type": "government", "available24h": true },
+  { "id": "cscr-ambulance", "name": "CSCR Hospital Ambulance", "organization": "CSCR", "division": "Chattogram", "district": "Chattogram", "phone": "+88031715000", "type": "private", "available24h": true },
+  { "id": "max-ambulance-ctg", "name": "Max Hospital Ambulance", "organization": "Max Hospital Chattogram", "division": "Chattogram", "district": "Chattogram", "phone": "+88031650500", "type": "private", "available24h": true },
+  { "id": "coxsbazar-sadar-amb", "name": "Cox's Bazar Sadar Hospital Ambulance", "organization": "CSH", "division": "Chattogram", "district": "Cox's Bazar", "phone": "+88034163342", "type": "government", "available24h": true },
+  { "id": "cumilla-medical-amb", "name": "Cumilla Medical College Ambulance", "organization": "CuMC", "division": "Chattogram", "district": "Cumilla", "phone": "+8808171555", "type": "government", "available24h": false },
+
+  { "id": "rmch-ambulance", "name": "Rajshahi Medical College Ambulance", "organization": "RMCH", "division": "Rajshahi", "district": "Rajshahi", "phone": "+880721775555", "type": "government", "available24h": true },
+  { "id": "rajshahi-sadar-amb", "name": "Rajshahi Sadar Hospital Ambulance", "organization": "RSH", "division": "Rajshahi", "district": "Rajshahi", "phone": "+880721775000", "type": "government", "available24h": false },
+  { "id": "bogura-medical-amb", "name": "Shaheed Ziaur Rahman Medical College Ambulance", "organization": "SZRMC", "division": "Rajshahi", "district": "Bogura", "phone": "+8805165000", "type": "government", "available24h": true },
+  { "id": "pabna-sadar-amb", "name": "Pabna Sadar Hospital Ambulance", "organization": "PSH", "division": "Rajshahi", "district": "Pabna", "phone": "+88073166000", "type": "government", "available24h": false },
+
+  { "id": "kmch-ambulance", "name": "Khulna Medical College Ambulance", "organization": "KMCH", "division": "Khulna", "district": "Khulna", "phone": "+88041761111", "type": "government", "available24h": true },
+  { "id": "jashore-medical-amb", "name": "Jashore Medical College Ambulance", "organization": "JMC", "division": "Khulna", "district": "Jashore", "phone": "+88042166600", "type": "government", "available24h": true },
+  { "id": "kushtia-sadar-amb", "name": "Kushtia Sadar Hospital Ambulance", "organization": "KSH", "division": "Khulna", "district": "Kushtia", "phone": "+8807171555", "type": "government", "available24h": false },
+
+  { "id": "barishal-medical-amb", "name": "Sher-E-Bangla Medical College Ambulance", "organization": "SBMCH", "division": "Barishal", "district": "Barishal", "phone": "+88043171000", "type": "government", "available24h": true },
+  { "id": "patuakhali-sadar-amb", "name": "Patuakhali Sadar Hospital Ambulance", "organization": "PaSH", "division": "Barishal", "district": "Patuakhali", "phone": "+88044170000", "type": "government", "available24h": false },
+
+  { "id": "rmch-rangpur", "name": "Rangpur Medical College Ambulance", "organization": "RpMC", "division": "Rangpur", "district": "Rangpur", "phone": "+88052162222", "type": "government", "available24h": true },
+  { "id": "dinajpur-medical-amb", "name": "M Abdur Rahim Medical College Ambulance", "organization": "MARMC", "division": "Rangpur", "district": "Dinajpur", "phone": "+88053165000", "type": "government", "available24h": true },
+
+  { "id": "mmch-ambulance", "name": "Mymensingh Medical College Ambulance", "organization": "MMCH", "division": "Mymensingh", "district": "Mymensingh", "phone": "+88091166600", "type": "government", "available24h": true },
+  { "id": "jamalpur-sadar-amb", "name": "Jamalpur Sadar Hospital Ambulance", "organization": "JaSH", "division": "Mymensingh", "district": "Jamalpur", "phone": "+88098163333", "type": "government", "available24h": false },
+
+  { "id": "smch-ambulance", "name": "Sylhet MAG Osmani Medical College Ambulance", "organization": "SOMC", "division": "Sylhet", "district": "Sylhet", "phone": "+880821716555", "type": "government", "available24h": true },
+  { "id": "habiganj-sadar-amb", "name": "Habiganj Sadar Hospital Ambulance", "organization": "HSH", "division": "Sylhet", "district": "Habiganj", "phone": "+88083171111", "type": "government", "available24h": false }
+]
