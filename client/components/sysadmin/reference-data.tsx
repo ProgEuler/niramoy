@@ -1,19 +1,5 @@
 "use client";
 
-/**
- * Page-19 Reference Data (system admin).
- *
- * Three sub-panels:
- *   1. Districts & Divisions — Add / rename / merge districts, assign per
- *      division. The 8 divisions are fixed; districts can be added or merged.
- *   2. Facility Categories — Manage bed types (ICU / NICU / CCU / HDU):
- *      description and an enable/disable toggle. Icons are derived from
- *      tabler-icons-react and stored by name.
- *   3. Ambulance Directory — Manage ambulance entries from the
- *      useAmbulanceStore. Add / edit / delete rows.
- *
- * All three panels are purely client-side; mutating toasts surface intent.
- */
 
 import { useMemo, useState } from "react";
 import {
@@ -65,8 +51,6 @@ export function ReferenceDataPanel({ ambulances }: Props) {
     </div>
   );
 }
-
-// ── 1. Districts & Divisions ──────────────────────────────────────────────────
 
 function DistrictsDivisionsPanel() {
   const { pushToast } = useToasts();
@@ -145,9 +129,6 @@ function DistrictsDivisionsPanel() {
     }
     setData((d) => {
       const next: Record<BangladeshDivision, string[]> = { ...d };
-      for (const div of ALL_DIVISIONS) {
-        if (div !== renaming.divisionsAnchor) continue;
-      }
       // Find which division currently owns `oldKey`.
       const owner = ALL_DIVISIONS.find((dv) =>
         (d[dv] as readonly string[]).includes(oldKey),
@@ -158,7 +139,6 @@ function DistrictsDivisionsPanel() {
         .sort((a, b) => a.localeCompare(b));
       return next;
     });
-    void renaming;
     pushToast({
       title: `Renamed to ${newName}`,
       variant: "success",
@@ -888,6 +868,4 @@ function ModalField({
   );
 }
 
-// Silence unused icon import lint for icons used only in JSX paths we
-// currently do not render (kept for future sub-panels).
 void IconBuildingCommunity;
