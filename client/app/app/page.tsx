@@ -1,10 +1,10 @@
 import { AppShell } from "@/components/app-shell";
-import { DashboardSkeleton } from "@/components/dashboard-skeleton";
+import HospitalFinderPage from "@/components/find-care/hospital-finder-page";
 
-export default function DemoPage() {
+export default function Page() {
 	return (
 		<AppShell>
-			<DashboardSkeleton />
+			<HospitalFinderPage />
 		</AppShell>
 	);
 }
