@@ -11,12 +11,11 @@ import {
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { EmergencyStrip } from "./emergency-strip"
+import { LogoIcon } from "../logo"
 
 const NAV_LINKS = [
   { href: "/", label: "Home" },
-  { href: "/find-care", label: "Find Beds" },
   { href: "/map", label: "Map View" },
-  { href: "/ambulance", label: "Ambulance" },
   { href: "/about", label: "About" },
 ] as const
 
@@ -29,7 +28,6 @@ export function SiteNavbar() {
 
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
-      <EmergencyStrip />
       <div className="mx-auto flex h-14 w-full max-w-7xl items-center justify-between gap-3 px-4 sm:px-6">
         {/* Logo + tagline */}
         <Link
@@ -37,9 +35,7 @@ export function SiteNavbar() {
           className="flex items-center gap-2"
           aria-label="Niramoy home"
         >
-          <span className="flex size-8 items-center justify-center rounded-md bg-niramoy-teal text-white">
-            <IconStethoscope className="size-5" />
-          </span>
+         {/* <LogoIcon /> */}
           <span className="flex flex-col leading-none">
             <span className="font-heading text-base font-semibold text-foreground">
               Niramoy
