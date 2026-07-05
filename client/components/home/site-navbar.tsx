@@ -10,8 +10,6 @@ import {
 } from "@tabler/icons-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
-import { EmergencyStrip } from "./emergency-strip"
-import { LogoIcon } from "../logo"
 
 const NAV_LINKS = [
   { href: "/", label: "Home" },

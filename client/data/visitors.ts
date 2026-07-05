@@ -43,26 +43,16 @@ export const visitorStats = {
   total: visitorCounts.reduce((sum, visitors) => sum + visitors, 0),
 };
 
+export const HIGHLIGHTED_COUNTRY = "Bangladesh";
+
 export function getVisitorColor(feature: ChoroplethFeature): string {
   const name = feature.properties?.name as string;
-  const visitors = visitorsByCountry[name];
 
-  if (!visitors) {
-    return "var(--muted)";
-  }
-  if (visitors >= 17) {
+  // Highlight only Bangladesh; fade all other countries
+  if (name === HIGHLIGHTED_COUNTRY) {
     return "var(--chart-1)";
   }
-  if (visitors >= 13) {
-    return "var(--chart-2)";
-  }
-  if (visitors >= 9) {
-    return "var(--chart-3)";
-  }
-  if (visitors >= 5) {
-    return "var(--chart-4)";
-  }
-  return "var(--chart-5)";
+  return "var(--muted)";
 }
 
 export function getVisitorValue(

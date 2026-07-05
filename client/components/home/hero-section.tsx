@@ -25,6 +25,7 @@ export function HeroSection() {
           className="font-heading text-3xl font-semibold tracking-tight text-foreground sm:text-4xl md:text-5xl"
         >
           Find ICU, NICU, CCU &amp; HDU Beds{" "}
+          <br />
           <span className="text-niramoy-teal">Near You</span> — Right Now
         </h1>
 
