@@ -1,23 +1,5 @@
 "use client";
 
-/**
- * PAGE 5 — Full Map View (public, no login).
- *
- * Layout (desktop, lg+):
- *   ┌───────────────┬─────────────────────────────────────────┐
- *   │ Filter Panel  │  Map canvas (Marker or Heatmap view)     │
- *   │ (320 px)      │  with collapsible results sidebar        │
- *   │               │  (right, 340 px) overlay                 │
- *   └───────────────┴─────────────────────────────────────────┘
- *
- * Mobile (<lg): the filter panel becomes a bottom-sheet trigger (FAB),
- * the sidebar becomes the same FAB. Map fills the viewport.
- *
- * The actual map implementation reuses MapLibre (already in the codebase).
- * The "Google Maps + markerclusterer" call in the spec maps directly onto
- * MapLibre's MapClusterLayer component with identical behavior.
- */
-
 import { useEffect, useMemo, useReducer, useState } from "react";
 import {
   IconFilter,

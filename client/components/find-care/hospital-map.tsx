@@ -98,7 +98,7 @@ export function HospitalMap({
   }, [hospitals, hoveredId]);
 
   return (
-    <Map center={[90.399, 23.777]} zoom={6.8} fadeDuration={0}>
+    <Map center={[90.399, 23.777]} zoom={6.8} fadeDuration={0} attributionControl={false}>
       <MapClusterLayer<HospitalProperties>
         data={featureCollection}
         clusterRadius={50}

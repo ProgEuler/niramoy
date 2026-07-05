@@ -1903,7 +1903,7 @@ type MapClusterLayerProps<
 };
 
 const DEFAULT_CLUSTER_COLORS: [string, string, string] = [
-  "#22c55e",
+  "#007a55",
   "#eab308",
   "#ef4444",
 ];
