@@ -31,11 +31,6 @@ export function SiteFooter() {
               Real-time ICU, NICU, CCU and HDU bed availability across
               hospitals in Bangladesh.
             </p>
-            <p className="rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-[11px] leading-relaxed text-foreground">
-              <strong className="font-semibold text-destructive">Disclaimer:</strong>{" "}
-              Bed counts are self-reported by hospital staff. Always call to
-              confirm before traveling.
-            </p>
           </div>
 
           {/* Links */}
@@ -91,10 +86,6 @@ export function SiteFooter() {
 
         <div className="mt-6 flex flex-wrap items-center justify-between gap-2 border-t pt-4 text-[11px] text-muted-foreground">
           <span>© {new Date().getFullYear()} Niramoy. All rights reserved.</span>
-          <span>
-            Made with care for{" "}
-            <span className="font-medium text-foreground/80">বাংলাদেশ</span>.
-          </span>
         </div>
       </div>
     </footer>

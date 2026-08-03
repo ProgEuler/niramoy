@@ -34,12 +34,6 @@ export function MapPopupContent({ hospital }: Props) {
             {hospital.district}, {hospital.division}
           </div>
         </div>
-        {hospital.verified && (
-          <Badge className="shrink-0 gap-1 bg-niramoy-teal text-white">
-            <IconShieldCheck className="size-3" />
-            Verified
-          </Badge>
-        )}
       </div>
 
       <div className="grid grid-cols-2 gap-x-3 gap-y-1 rounded-md bg-muted/40 p-2">
@@ -58,7 +52,7 @@ export function MapPopupContent({ hospital }: Props) {
         <span>{formatRelativeTime(hospital.last_updated)}</span>
       </div>
 
-      <div className="flex items-center justify-end gap-1.5 pt-0.5">
+      <div>
         <Button
           type="button"
           variant="outline"

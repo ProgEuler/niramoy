@@ -2,7 +2,6 @@
 
 import type { ChoroplethFeature } from "@/components/charts";
 import {
-  ChartStatFlow,
   ChoroplethChart,
   ChoroplethFeatureComponent,
   ChoroplethTooltip,
@@ -11,24 +10,17 @@ import { useState } from "react";
 import { useWorldDataStandalone } from "@/lib/use-world-data";
 import {
   Card,
-  CardAction,
   CardContent,
-  CardHeader,
-  CardTitle,
 } from "@/components/ui/card";
 import {
   getVisitorColor,
   getVisitorValue,
-  visitorStats,
 } from "../data/visitors";
 import {
   StatCardChart,
   type StatCardHoverState,
-  statCardLabelClassName,
-  statCardValueClassName,
 } from "./stat-card-chart";
 import { StatCardChoroplethHoverBridge } from "./stat-card-choropleth-hover-bridge";
-import { TrendBadge } from "./trend-badge";
 
 export function StatCardChoropleth() {
   const { worldData, isLoading } = useWorldDataStandalone();
@@ -37,26 +29,10 @@ export function StatCardChoropleth() {
     label: null,
     trend: null,
   });
-  const displayValue = hover.value ?? visitorStats.total;
-  const displayLabel = hover.label ?? "Total";
-  const displayTrend = hover.trend ?? visitorStats.trend;
 
   return (
-    <Card className="relative w-full gap-0 overflow-hidden py-0">
-      <CardHeader className="pointer-events-none absolute inset-x-0 top-0 z-10 grid auto-rows-min grid-cols-[1fr_auto] items-start gap-1 border-0 bg-gradient-to-b from-45% from-card to-transparent px-4 py-3 pb-10 shadow-none ring-0">
-        <div className="flex flex-col gap-0.5">
-          <CardTitle>Unique Visitors</CardTitle>
-          <ChartStatFlow
-            label={displayLabel}
-            labelClassName={statCardLabelClassName}
-            value={displayValue}
-            valueClassName={statCardValueClassName}
-          />
-        </div>
-        <CardAction>
-          <TrendBadge value={displayTrend} />
-        </CardAction>
-      </CardHeader>
+    <Card className="relative w-full gap-0 overflow-hidden py-0 rounded-none">
+
 
       <CardContent className="p-0">
         {isLoading || !worldData ? (
@@ -78,10 +54,10 @@ export function StatCardChoropleth() {
                   getVisitorColor(feature)
                 }
               />
-              <ChoroplethTooltip
+              {/* <ChoroplethTooltip
                 getFeatureValue={getVisitorValue}
                 valueLabel="Visitors"
-              />
+              /> */}
             </ChoroplethChart>
           </StatCardChart>
         )}

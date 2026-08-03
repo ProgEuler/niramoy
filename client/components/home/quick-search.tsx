@@ -84,7 +84,7 @@ export function QuickSearch() {
         e.preventDefault();
         handleSearch();
       }}
-      className="rounded-xl border bg-card p-3 shadow-sm ring-1 ring-foreground/5 sm:p-4"
+      className=" p-3  ring-foreground/5 sm:p-4"
       aria-label="Quick bed search"
     >
       <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_auto_auto] lg:items-end">

@@ -1,17 +1,5 @@
 "use client";
 
-/**
- * PAGE 7 — Login (Hospital Admin + System Admin).
- *
- * UI shell with role-detection. Test fixtures:
- *   • sysadmin@niramoy.bd  → System Admin → /admin
- *   • admin@<anything>     → System Admin (heuristic)
- *   • anything else        → Hospital Admin   → /admin/hospital
- *
- * The form also has a register link + forgot-password flow. There is no real
- * backend; the role detection stands in for what would be a JWT role claim.
- */
-
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -30,13 +18,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { SiteNavbar } from "@/components/home/site-navbar";
 import { SiteFooter } from "@/components/home/site-footer";
 
-function detectRole(email: string): "system" | "hospital" {
-  const lower = email.toLowerCase();
-  if (lower.startsWith("sysadmin") || lower.includes("system") || lower.startsWith("admin"))
-    return "system";
-  return "hospital";
-}
-
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
@@ -45,22 +26,7 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
-    setError(null);
-
-    if (!email.trim() || !password) {
-      setError("Please enter both your email and password.");
-      return;
-    }
-
-    setLoading(true);
-    // Mimic an auth round-trip so the user feels progress; replace with a
-    // real API call (POST /api/auth/login) when the backend lands.
-    setTimeout(() => {
-      const role = detectRole(email);
-      router.push(role === "system" ? "/admin" : "/admin/hospital");
-    }, 600);
+  function handleSubmit() {
   }
 
   return (
@@ -70,13 +36,6 @@ export default function LoginPage() {
         <div className="w-full max-w-md">
           {/* Header */}
           <div className="mb-6 flex flex-col items-center text-center">
-            <span className="flex size-12 items-center justify-center rounded-xl bg-niramoy-teal text-white shadow-md">
-              <IconStethoscope className="size-6" />
-            </span>
-            <p className="mt-3 inline-flex items-center gap-1 rounded-full border bg-card px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-foreground/70">
-              <IconShieldLock className="size-3" />
-              Staff Portal
-            </p>
             <h1 className="mt-2 font-heading text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
               Sign in to Niramoy
             </h1>

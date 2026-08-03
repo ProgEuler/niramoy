@@ -20,16 +20,12 @@ export function HeroSection() {
       />
 
       <div className="mx-auto flex w-full max-w-7xl flex-col items-center gap-6 px-4 py-12 text-center sm:px-6 sm:py-16 lg:py-20">
-        <span className="inline-flex items-center gap-1.5 rounded-full border bg-card/80 px-3 py-1 text-[11px] font-medium text-foreground/80 shadow-sm">
-          <IconShieldCheck className="size-3.5 text-niramoy-teal" />
-          Data sourced from DGHS-registered hospitals
-        </span>
-
         <h1
           id="hero-heading"
           className="font-heading text-3xl font-semibold tracking-tight text-foreground sm:text-4xl md:text-5xl"
         >
           Find ICU, NICU, CCU &amp; HDU Beds{" "}
+          <br />
           <span className="text-niramoy-teal">Near You</span> — Right Now
         </h1>
 
@@ -37,15 +33,6 @@ export function HeroSection() {
           Real-time bed availability across hospitals in Bangladesh. Stop
           calling one hospital after another — see which one has space before
           you pick up the phone.
-        </p>
-
-        <div className="w-full max-w-3xl">
-          <QuickSearch />
-        </div>
-
-        <p className="flex items-center gap-1.5 text-[11px] text-muted-foreground">
-          <IconHeartbeat className="size-3.5 text-niramoy-teal" />
-          Average search → call time: under 2 minutes
         </p>
       </div>
     </section>
