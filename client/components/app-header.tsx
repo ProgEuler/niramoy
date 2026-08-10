@@ -33,12 +33,12 @@ export function AppHeader({ page }: AppHeaderProps) {
 				<AppBreadcrumbs page={page} />
 			</div>
 			<div className="flex items-center gap-3">
-				<Button size="icon-sm" variant="outline">
+				{/* <Button size="icon-sm" variant="outline">
 					<IconSend />
 				</Button>
 				<Button aria-label="Notifications" size="icon-sm" variant="outline">
 					<IconBell />
-				</Button>
+				</Button> */}
 				<Separator
 					className="h-4 data-[orientation=vertical]:self-center"
 					orientation="vertical"
