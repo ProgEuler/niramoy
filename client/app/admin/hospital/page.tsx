@@ -16,7 +16,6 @@
 import { useMemo } from "react";
 import Link from "next/link";
 import { IconActivity, IconShieldCheck } from "@tabler/icons-react";
-import { AdminSidebar } from "@/components/hospital-admin/admin-sidebar";
 import { StaleDataBanner } from "@/components/hospital-admin/stale-data-banner";
 import { QuickUpdateWidget } from "@/components/hospital-admin/quick-update-widget";
 import { RecentUpdateLog } from "@/components/hospital-admin/recent-update-log";
@@ -62,34 +61,29 @@ export default function HospitalAdminDashboard() {
   }
 
   return (
-    <div className="flex min-h-[calc(100dvh-3.5rem)] bg-muted/20">
-      <div className="hidden md:block">
-        <AdminSidebar hospital={hospital} />
+    <div className="flex min-h-[calc(100dvh-3.5rem)] flex-col bg-muted/20">
+      <div className="border-b bg-card px-4 py-3 sm:px-6">
+        <div className="flex flex-wrap items-baseline justify-between gap-2">
+          <div>
+            <h1 className="font-heading text-xl font-semibold tracking-tight">
+              Dashboard
+            </h1>
+            <p className="text-xs text-muted-foreground">
+              Welcome back. Here’s the latest snapshot of {hospital.name}.
+            </p>
+          </div>
+          <span className="inline-flex items-center gap-1 rounded-full bg-niramoy-teal/10 px-2 py-0.5 text-[10px] font-semibold text-niramoy-teal">
+            <IconShieldCheck className="size-3" />
+            Hospital Admin
+          </span>
+        </div>
       </div>
 
-      <div className="flex min-w-0 flex-1 flex-col">
-        <div className="border-b bg-card px-4 py-3 sm:px-6">
-          <div className="flex flex-wrap items-baseline justify-between gap-2">
-            <div>
-              <h1 className="font-heading text-xl font-semibold tracking-tight">
-                Dashboard
-              </h1>
-              <p className="text-xs text-muted-foreground">
-                Welcome back. Here’s the latest snapshot of {hospital.name}.
-              </p>
-            </div>
-            <span className="inline-flex items-center gap-1 rounded-full bg-niramoy-teal/10 px-2 py-0.5 text-[10px] font-semibold text-niramoy-teal">
-              <IconShieldCheck className="size-3" />
-              Hospital Admin
-            </span>
-          </div>
-        </div>
+      <div className="flex-1 space-y-4 p-4 sm:p-6">
+        <StaleDataBanner lastUpdated={hospital.last_updated} />
 
-        <div className="flex-1 space-y-4 p-4 sm:p-6">
-          <StaleDataBanner lastUpdated={hospital.last_updated} />
-
-          {/* 4 status cards */}
-          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
+        {/* 4 status cards */}
+        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-4">
             {ALL_BED_TYPES.map((t) => {
               const { total, available } = hospital.beds[t];
               const cls = getAvailabilityClass(hospital, t);
@@ -138,14 +132,13 @@ export default function HospitalAdminDashboard() {
             })}
           </div>
 
-          {/* Two-column row: quick update + public preview */}
-          <div className="grid gap-3 lg:grid-cols-[1fr_1fr]">
-            <QuickUpdateWidget hospital={hospital} />
-            <PublicPreviewCard hospital={hospital} />
-          </div>
-
-          <RecentUpdateLog hospital={hospital} />
+        {/* Two-column row: quick update + public preview */}
+        <div className="grid gap-3 lg:grid-cols-[1fr_1fr]">
+          <QuickUpdateWidget hospital={hospital} />
+          <PublicPreviewCard hospital={hospital} />
         </div>
+
+        <RecentUpdateLog hospital={hospital} />
       </div>
     </div>
   );

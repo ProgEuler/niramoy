@@ -1,4 +1,4 @@
-"use client";
+"use client"
 
 /**
  * The left (or bottom-sheet) panel. Composition only — all behavior lives in
@@ -8,34 +8,31 @@
  * map can react via the parent.
  */
 
-import { Card, CardContent } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
-import { LiveStatsBar } from "@/components/find-care/live-stats-bar";
-import { BedTypeToggles } from "@/components/find-care/bed-type-toggles";
-import { DivisionSelect } from "@/components/find-care/division-select";
-import { DistrictSelect } from "@/components/find-care/district-select";
-import { CostRangeSlider } from "@/components/find-care/cost-range-slider";
-import { AvailabilityToggle } from "@/components/find-care/availability-toggle";
-import { RadiusPills } from "@/components/find-care/radius-pills";
-import { FindNearestButton } from "@/components/find-care/find-nearest-button";
-import { ClearFiltersButton } from "@/components/find-care/clear-filters-button";
-import { SortBar } from "@/components/find-care/sort-bar";
-import { ResultsList } from "@/components/find-care/results-list";
-import { Disclaimer } from "@/components/find-care/disclaimer";
-import { GeoErrorBanner } from "@/components/find-care/geo-error-banner";
-import type {
-  FilterAction,
-  FilterState,
-} from "@/app/app/find-care/filters";
-import type { Hospital, HospitalStats } from "@/lib/types/hospital";
+import { Card, CardContent } from "@/components/ui/card"
+import { Separator } from "@/components/ui/separator"
+import { LiveStatsBar } from "@/components/find-care/live-stats-bar"
+import { BedTypeToggles } from "@/components/find-care/bed-type-toggles"
+import { DivisionSelect } from "@/components/find-care/division-select"
+import { DistrictSelect } from "@/components/find-care/district-select"
+import { CostRangeSlider } from "@/components/find-care/cost-range-slider"
+import { AvailabilityToggle } from "@/components/find-care/availability-toggle"
+import { RadiusPills } from "@/components/find-care/radius-pills"
+import { FindNearestButton } from "@/components/find-care/find-nearest-button"
+import { ClearFiltersButton } from "@/components/find-care/clear-filters-button"
+import { SortBar } from "@/components/find-care/sort-bar"
+import { ResultsList } from "@/components/find-care/results-list"
+import { Disclaimer } from "@/components/find-care/disclaimer"
+import { GeoErrorBanner } from "@/components/find-care/geo-error-banner"
+import type { FilterAction, FilterState } from "@/lib/filters"
+import type { Hospital, HospitalStats } from "@/lib/types/hospital"
 
 interface Props {
-  state: FilterState;
-  dispatch: React.Dispatch<FilterAction>;
-  stats: HospitalStats;
-  filtered: Hospital[];
-  onHover: (id: string | null) => void;
-  onSelect: (id: string) => void;
+  state: FilterState
+  dispatch: React.Dispatch<FilterAction>
+  stats: HospitalStats
+  filtered: Hospital[]
+  onHover: (id: string | null) => void
+  onSelect: (id: string) => void
 }
 
 export function LeftPanel({
@@ -102,22 +99,22 @@ export function LeftPanel({
 
       <Disclaimer />
     </div>
-  );
+  )
 }
 
 function Section({
   label,
   children,
 }: {
-  label: string;
-  children: React.ReactNode;
+  label: string
+  children: React.ReactNode
 }) {
   return (
     <div className="space-y-1.5">
-      <div className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+      <div className="text-[10px] font-medium tracking-wider text-muted-foreground uppercase">
         {label}
       </div>
       {children}
     </div>
-  );
+  )
 }

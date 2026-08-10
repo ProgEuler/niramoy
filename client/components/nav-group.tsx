@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/sidebar";
 import type { SidebarNavGroup } from "@/components/app-shared";
 import { IconChevronRight } from "@tabler/icons-react";
+import Link from "next/link";
 
 export function NavGroup({ label, items }: SidebarNavGroup) {
 	return (
@@ -49,10 +50,10 @@ export function NavGroup({ label, items }: SidebarNavGroup) {
 														asChild
 														isActive={subItem.isActive}
 													>
-														<a href={subItem.path}>
+														<Link href={subItem.path}>
 															{subItem.icon}
 															<span>{subItem.title}</span>
-														</a>
+														</Link>
 													</SidebarMenuSubButton>
 												</SidebarMenuSubItem>
 											))}
@@ -61,10 +62,10 @@ export function NavGroup({ label, items }: SidebarNavGroup) {
 								</>
 							) : (
 								<SidebarMenuButton asChild isActive={item.isActive}>
-									<a href={item.path}>
+									<Link href={item.path}>
 										{item.icon}
 										<span>{item.title}</span>
-									</a>
+									</Link>
 								</SidebarMenuButton>
 							)}
 						</SidebarMenuItem>

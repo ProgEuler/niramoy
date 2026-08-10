@@ -1,4 +1,4 @@
-"use client";
+"use client"
 
 import {
   Select,
@@ -6,12 +6,12 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import type { FilterAction } from "@/app/app/find-care/filters";
+} from "@/components/ui/select"
+import type { FilterAction } from "@/lib/filters"
 
 interface Props {
-  value: number;
-  dispatch: React.Dispatch<FilterAction>;
+  value: number
+  dispatch: React.Dispatch<FilterAction>
 }
 
 const OPTIONS = [
@@ -19,7 +19,7 @@ const OPTIONS = [
   { value: 3, label: "3★ & up" },
   { value: 4, label: "4★ & up" },
   { value: 4.5, label: "4.5★ & up" },
-];
+]
 
 export function RatingSelect({ value, dispatch }: Props) {
   return (
@@ -40,5 +40,5 @@ export function RatingSelect({ value, dispatch }: Props) {
         ))}
       </SelectContent>
     </Select>
-  );
+  )
 }

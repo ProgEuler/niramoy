@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { LogoIcon } from "@/components/logo";
 import {
@@ -11,11 +12,28 @@ import {
 	SidebarMenuButton,
 	SidebarMenuItem,
 } from "@/components/ui/sidebar";
-import { footerNavLinks, navGroups } from "@/components/app-shared";
-import { LatestChange } from "@/components/latest-change";
 import { NavGroup } from "@/components/nav-group";
+import { getNavGroupsForRole } from "@/components/app-shared";
+import { useAuth } from "@/lib/auth/use-auth";
+import type { UserRole } from "@/lib/api/auth";
+import { Button } from "@/components/ui/button";
+import { IconLogout } from "@tabler/icons-react";
+import Link from "next/link";
 
-export function AppSidebar() {
+export interface AppSidebarProps {
+	role: UserRole | null;
+}
+
+export function AppSidebar({ role }: AppSidebarProps) {
+	const groups = getNavGroupsForRole(role);
+	const { signOut } = useAuth();
+	const router = useRouter();
+
+	function handleLogout() {
+		signOut();
+		router.replace("/login");
+	}
+
 	return (
 		<Sidebar
 			className={cn(
@@ -28,41 +46,31 @@ export function AppSidebar() {
 		>
 			<SidebarHeader className="h-14 justify-center border-b px-2">
 				<SidebarMenuButton asChild>
-					<a href="#link">
-						<LogoIcon />
+					<Link href="/">
+						{/* <LogoIcon /> */}
 						<span className="font-medium text-foreground!">Niramoy</span>
-					</a>
+					</Link>
 				</SidebarMenuButton>
 			</SidebarHeader>
 			<SidebarContent>
-				{navGroups.map((group, index) => (
+				{groups.map((group, index) => (
 					<NavGroup key={`sidebar-group-${index}`} {...group} />
 				))}
 			</SidebarContent>
 			<SidebarFooter className="gap-0 p-0">
-				<LatestChange />
 				<SidebarMenu className="border-t p-2">
-					{footerNavLinks.map((item) => (
-						<SidebarMenuItem key={item.title}>
-							<SidebarMenuButton
-								asChild
-								className="text-muted-foreground"
-								isActive={item.isActive}
-								size="sm"
-							>
-								<a href={item.path}>
-									{item.icon}
-									<span>{item.title}</span>
-								</a>
-							</SidebarMenuButton>
-						</SidebarMenuItem>
-					))}
+					<SidebarMenuItem>
+						<Button
+							variant="ghost"
+							size="sm"
+							className="w-full justify-start gap-2 text-muted-foreground"
+							onClick={handleLogout}
+						>
+							<IconLogout className="size-3.5" />
+							Log out
+						</Button>
+					</SidebarMenuItem>
 				</SidebarMenu>
-				<div className="px-4 pt-4 pb-2 transition-opacity group-data-[collapsible=icon]:pointer-events-none group-data-[collapsible=icon]:opacity-0">
-					<p className="text-nowrap text-[9px] text-muted-foreground">
-						© {new Date().getFullYear()} Efferd LLC
-					</p>
-				</div>
 			</SidebarFooter>
 		</Sidebar>
 	);

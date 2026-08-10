@@ -1,11 +1,11 @@
-"use client";
+"use client"
 
-import { Checkbox } from "@/components/ui/checkbox";
-import type { FilterAction } from "@/app/app/find-care/filters";
+import { Checkbox } from "@/components/ui/checkbox"
+import type { FilterAction } from "@/lib/filters"
 
 interface Props {
-  value: boolean;
-  dispatch: React.Dispatch<FilterAction>;
+  value: boolean
+  dispatch: React.Dispatch<FilterAction>
 }
 
 export function AvailabilityToggle({ value, dispatch }: Props) {
@@ -18,5 +18,5 @@ export function AvailabilityToggle({ value, dispatch }: Props) {
       />
       Show only hospitals with available beds
     </label>
-  );
+  )
 }

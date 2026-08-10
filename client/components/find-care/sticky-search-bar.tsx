@@ -1,4 +1,4 @@
-"use client";
+"use client"
 
 /**
  * Sticky search bar for Page 2. A condensed, always-visible band at the top
@@ -7,32 +7,32 @@
  * intentionally compact — secondary controls live below as filter pills.
  */
 
-import { useState } from "react";
-import { IconChevronDown, IconFilter } from "@tabler/icons-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { useState } from "react"
+import { IconChevronDown, IconFilter } from "@tabler/icons-react"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from "@/components/ui/collapsible";
-import { DivisionSelect } from "@/components/find-care/division-select";
-import { DistrictSelect } from "@/components/find-care/district-select";
-import { BedTypeToggles } from "@/components/find-care/bed-type-toggles";
-import { CostRangeSlider } from "@/components/find-care/cost-range-slider";
-import { RatingSelect } from "@/components/find-care/rating-select";
-import { RadiusPills } from "@/components/find-care/radius-pills";
-import { FindNearestButton } from "@/components/find-care/find-nearest-button";
-import { GeoErrorBanner } from "@/components/find-care/geo-error-banner";
-import type { FilterAction, FilterState } from "@/app/app/find-care/filters";
+} from "@/components/ui/collapsible"
+import { DivisionSelect } from "@/components/find-care/division-select"
+import { DistrictSelect } from "@/components/find-care/district-select"
+import { BedTypeToggles } from "@/components/find-care/bed-type-toggles"
+import { CostRangeSlider } from "@/components/find-care/cost-range-slider"
+import { RatingSelect } from "@/components/find-care/rating-select"
+import { RadiusPills } from "@/components/find-care/radius-pills"
+import { FindNearestButton } from "@/components/find-care/find-nearest-button"
+import { GeoErrorBanner } from "@/components/find-care/geo-error-banner"
+import type { FilterAction, FilterState } from "@/lib/filters"
 
 interface Props {
-  state: FilterState;
-  dispatch: React.Dispatch<FilterAction>;
+  state: FilterState
+  dispatch: React.Dispatch<FilterAction>
 }
 
 export function StickySearchBar({ state, dispatch }: Props) {
-  const [advancedOpen, setAdvancedOpen] = useState(false);
+  const [advancedOpen, setAdvancedOpen] = useState(false)
 
   return (
     <Card
@@ -52,10 +52,7 @@ export function StickySearchBar({ state, dispatch }: Props) {
             />
           </Field>
           <Field label="Bed type">
-            <BedTypeToggles
-              selected={state.bedTypes}
-              dispatch={dispatch}
-            />
+            <BedTypeToggles selected={state.bedTypes} dispatch={dispatch} />
           </Field>
           <div className="flex items-end gap-1.5">
             <Collapsible
@@ -90,7 +87,7 @@ export function StickySearchBar({ state, dispatch }: Props) {
                 if (typeof document !== "undefined") {
                   document
                     .getElementById("results-anchor")
-                    ?.scrollIntoView({ behavior: "smooth", block: "start" });
+                    ?.scrollIntoView({ behavior: "smooth", block: "start" })
                 }
               }}
             >
@@ -103,10 +100,7 @@ export function StickySearchBar({ state, dispatch }: Props) {
           <CollapsibleContent className="space-y-3 pt-1">
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               <Field label="Cost per day">
-                <CostRangeSlider
-                  value={state.costRange}
-                  dispatch={dispatch}
-                />
+                <CostRangeSlider value={state.costRange} dispatch={dispatch} />
               </Field>
               <Field label="Minimum rating">
                 <RatingSelect value={state.minRating} dispatch={dispatch} />
@@ -130,22 +124,22 @@ export function StickySearchBar({ state, dispatch }: Props) {
         </Collapsible>
       </CardContent>
     </Card>
-  );
+  )
 }
 
 function Field({
   label,
   children,
 }: {
-  label: string;
-  children: React.ReactNode;
+  label: string
+  children: React.ReactNode
 }) {
   return (
     <div className="min-w-0 space-y-1">
-      <div className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+      <div className="text-[10px] font-medium tracking-wider text-muted-foreground uppercase">
         {label}
       </div>
       <div className="w-full">{children}</div>
     </div>
-  );
+  )
 }

@@ -1,18 +1,18 @@
-"use client";
+"use client"
 
-import { useId } from "react";
+import { useId } from "react"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import type { FilterAction, SortKey } from "@/app/app/find-care/filters";
+} from "@/components/ui/select"
+import type { FilterAction, SortKey } from "@/lib/filters"
 
 interface Props {
-  value: SortKey;
-  dispatch: React.Dispatch<FilterAction>;
+  value: SortKey
+  dispatch: React.Dispatch<FilterAction>
 }
 
 const OPTIONS: { value: SortKey; label: string }[] = [
@@ -20,10 +20,10 @@ const OPTIONS: { value: SortKey; label: string }[] = [
   { value: "available", label: "Most Available" },
   { value: "cost", label: "Lowest Cost" },
   { value: "rating", label: "Top Rated" },
-];
+]
 
 export function SortBar({ value, dispatch }: Props) {
-  const id = useId();
+  const id = useId()
   return (
     <div className="flex items-center justify-between gap-2">
       <label htmlFor={id} className="text-xs text-muted-foreground">
@@ -47,5 +47,5 @@ export function SortBar({ value, dispatch }: Props) {
         </SelectContent>
       </Select>
     </div>
-  );
+  )
 }

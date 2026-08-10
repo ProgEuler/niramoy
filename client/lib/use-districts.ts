@@ -48,7 +48,6 @@ export const DIVISION_DISTRICTS: Readonly<
     "Joypurhat",
     "Naogaon",
     "Natore",
-    "Nawabganj",
     "Pabna",
     "Rajshahi",
     "Sirajganj",

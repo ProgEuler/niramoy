@@ -1,4 +1,4 @@
-"use client";
+"use client"
 
 /**
  * Empty-state for Page 2 when filters return zero hospitals. Suggests three
@@ -7,26 +7,23 @@
  * wrong.
  */
 
-import Link from "next/link";
+import Link from "next/link"
 import {
   IconAmbulance,
   IconCompass,
   IconCurrencyTaka,
   IconList,
-} from "@tabler/icons-react";
-import { Button } from "@/components/ui/button";
-import type {
-  FilterAction,
-  FilterState,
-} from "@/app/app/find-care/filters";
+} from "@tabler/icons-react"
+import { Button } from "@/components/ui/button"
+import type { FilterAction, FilterState } from "@/lib/filters"
 
 interface Props {
-  state: FilterState;
-  dispatch: React.Dispatch<FilterAction>;
+  state: FilterState
+  dispatch: React.Dispatch<FilterAction>
 }
 
 export function NoResultsState({ state, dispatch }: Props) {
-  const bedType = state.bedTypes[0];
+  const bedType = state.bedTypes[0]
   const bedLabel = bedType
     ? bedType === "icu"
       ? "ICU"
@@ -35,9 +32,9 @@ export function NoResultsState({ state, dispatch }: Props) {
         : bedType === "ccu"
           ? "CCU"
           : "HDU"
-    : "ICU";
+    : "ICU"
 
-  const location = state.district !== "all" ? state.district : state.division;
+  const location = state.district !== "all" ? state.district : state.division
 
   return (
     <div className="flex flex-col items-center gap-4 rounded-xl border border-dashed bg-card/50 px-4 py-10 text-center">
@@ -59,7 +56,7 @@ export function NoResultsState({ state, dispatch }: Props) {
           label="Try nearby districts"
           onClick={() => {
             // Reset district so division-level matches show up
-            dispatch({ type: "SET_DISTRICT", district: "all" });
+            dispatch({ type: "SET_DISTRICT", district: "all" })
           }}
         />
         <Suggestion
@@ -76,12 +73,12 @@ export function NoResultsState({ state, dispatch }: Props) {
             dispatch({
               type: "TOGGLE_BED_TYPE",
               bedType: "icu",
-            });
-            dispatch({ type: "TOGGLE_BED_TYPE", bedType: "nicu" });
-            dispatch({ type: "TOGGLE_BED_TYPE", bedType: "ccu" });
-            dispatch({ type: "TOGGLE_BED_TYPE", bedType: "hdu" });
-            dispatch({ type: "SET_DIVISION", division: "all" });
-            dispatch({ type: "SET_DISTRICT", district: "all" });
+            })
+            dispatch({ type: "TOGGLE_BED_TYPE", bedType: "nicu" })
+            dispatch({ type: "TOGGLE_BED_TYPE", bedType: "ccu" })
+            dispatch({ type: "TOGGLE_BED_TYPE", bedType: "hdu" })
+            dispatch({ type: "SET_DIVISION", division: "all" })
+            dispatch({ type: "SET_DISTRICT", district: "all" })
           }}
         />
       </ul>
@@ -98,7 +95,7 @@ export function NoResultsState({ state, dispatch }: Props) {
         </Button>
       </Link>
     </div>
-  );
+  )
 }
 
 function Suggestion({
@@ -106,9 +103,9 @@ function Suggestion({
   label,
   onClick,
 }: {
-  icon: React.ReactNode;
-  label: string;
-  onClick: () => void;
+  icon: React.ReactNode
+  label: string
+  onClick: () => void
 }) {
   return (
     <li>
@@ -128,5 +125,5 @@ function Suggestion({
         </span>
       </button>
     </li>
-  );
+  )
 }

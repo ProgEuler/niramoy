@@ -1,16 +1,16 @@
-"use client";
+"use client"
 
-import { useId } from "react";
-import { Slider } from "@/components/ui/slider";
-import { formatTaka } from "@/lib/hospital-utils";
-import type { FilterAction } from "@/app/app/find-care/filters";
+import { useId } from "react"
+import { Slider } from "@/components/ui/slider"
+import { formatTaka } from "@/lib/hospital-utils"
+import type { FilterAction } from "@/lib/filters"
 
 interface Props {
-  value: [number, number];
-  dispatch: React.Dispatch<FilterAction>;
-  min?: number;
-  max?: number;
-  step?: number;
+  value: [number, number]
+  dispatch: React.Dispatch<FilterAction>
+  min?: number
+  max?: number
+  step?: number
 }
 
 export function CostRangeSlider({
@@ -20,7 +20,7 @@ export function CostRangeSlider({
   max = 20_000,
   step = 500,
 }: Props) {
-  const labelId = useId();
+  const labelId = useId()
   return (
     <div className="space-y-1.5">
       <div className="flex items-center justify-between text-xs">
@@ -40,11 +40,11 @@ export function CostRangeSlider({
         minStepsBetweenThumbs={1}
         onValueChange={(v) => {
           if (v.length === 2) {
-            dispatch({ type: "SET_COST_RANGE", range: [v[0], v[1]] });
+            dispatch({ type: "SET_COST_RANGE", range: [v[0], v[1]] })
           }
         }}
         className="mt-1"
       />
     </div>
-  );
+  )
 }

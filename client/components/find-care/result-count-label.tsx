@@ -1,12 +1,12 @@
-"use client";
+"use client"
 
-import type { BedType, Hospital } from "@/lib/types/hospital";
-import type { FilterState } from "@/app/app/find-care/filters";
+import type { BedType, Hospital } from "@/lib/types/hospital"
+import type { FilterState } from "@/lib/filters"
 
 interface Props {
-  count: number;
-  state: FilterState;
-  totalHospitals: number;
+  count: number
+  state: FilterState
+  totalHospitals: number
 }
 
 const BED_LABEL: Record<BedType, string> = {
@@ -14,7 +14,7 @@ const BED_LABEL: Record<BedType, string> = {
   nicu: "NICU",
   ccu: "CCU",
   hdu: "HDU",
-};
+}
 
 /**
  * "Showing 14 hospitals in Dhaka with available ICU beds" — the canonical
@@ -27,17 +27,17 @@ export function ResultCountLabel({ count, state, totalHospitals }: Props) {
       ? state.district
       : state.division !== "all"
         ? state.division
-        : null;
+        : null
 
   // First selected bed type drives the headline; we keep it simple instead of
   // enumerating combinations.
-  const selectedBeds = state.bedTypes;
+  const selectedBeds = state.bedTypes
   const bedText =
     selectedBeds.length === 0
       ? "across all bed types"
       : selectedBeds.length === 4
         ? "across ICU, NICU, CCU & HDU beds"
-        : `with available ${selectedBeds.map((b) => BED_LABEL[b]).join(" / ")} beds`;
+        : `with available ${selectedBeds.map((b) => BED_LABEL[b]).join(" / ")} beds`
 
   if (count === 0) {
     return (
@@ -47,7 +47,7 @@ export function ResultCountLabel({ count, state, totalHospitals }: Props) {
           (out of {totalHospitals} listed)
         </span>
       </p>
-    );
+    )
   }
 
   return (
@@ -57,5 +57,5 @@ export function ResultCountLabel({ count, state, totalHospitals }: Props) {
       </span>
       {loc ? <> in {loc}</> : null} {bedText}.
     </p>
-  );
+  )
 }

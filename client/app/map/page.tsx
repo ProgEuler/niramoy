@@ -1,14 +1,14 @@
-"use client";
+"use client"
 
-import { useEffect, useMemo, useReducer, useState } from "react";
+import { useEffect, useMemo, useReducer, useState } from "react"
 import {
   IconFilter,
   IconLayout2,
   IconLayoutGrid,
   IconList,
-} from "@tabler/icons-react";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+} from "@tabler/icons-react"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
 import {
   Sheet,
   SheetContent,
@@ -16,62 +16,62 @@ import {
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from "@/components/ui/sheet";
-import { SiteNavbar } from "@/components/home/site-navbar";
-import { SiteFooter } from "@/components/home/site-footer";
-import { Disclaimer } from "@/components/find-care/disclaimer";
-import { HospitalMap } from "@/components/find-care/hospital-map";
-import { MapFilterPanel } from "@/components/map-view/map-filter-panel";
-import { MapResultsSidebar } from "@/components/map-view/map-results-sidebar";
-import { AvailabilityHeatmap } from "@/components/map-view/availability-heatmap";
-import { useHospitalStore } from "@/lib/use-hospital-store";
+} from "@/components/ui/sheet"
+import { SiteNavbar } from "@/components/home/site-navbar"
+import { SiteFooter } from "@/components/home/site-footer"
+import { Disclaimer } from "@/components/find-care/disclaimer"
+import { HospitalMap } from "@/components/find-care/hospital-map"
+import { MapFilterPanel } from "@/components/map-view/map-filter-panel"
+import { MapResultsSidebar } from "@/components/map-view/map-results-sidebar"
+import { AvailabilityHeatmap } from "@/components/map-view/availability-heatmap"
+import { useHospitalStore } from "@/lib/use-hospital-store"
 import {
   applyFilters,
   filterReducer,
   INITIAL_FILTER_STATE,
-} from "@/app/app/find-care/filters";
-import type { Hospital } from "@/lib/types/hospital";
-import { cn } from "@/lib/utils";
+} from "@/lib/filters"
+import type { Hospital } from "@/lib/types/hospital"
+import { cn } from "@/lib/utils"
 
-type ViewMode = "marker" | "heatmap";
+type ViewMode = "marker" | "heatmap"
 
 export default function MapPage() {
-  const { hospitals } = useHospitalStore();
-  const [state, dispatch] = useReducer(filterReducer, INITIAL_FILTER_STATE);
-  const [viewMode, setViewMode] = useState<ViewMode>("marker");
-  const [sidebarOpen, setSidebarOpen] = useState(true);
-  const [mobileSheetOpen, setMobileSheetOpen] = useState(false);
+  const { hospitals } = useHospitalStore()
+  const [state, dispatch] = useReducer(filterReducer, INITIAL_FILTER_STATE)
+  const [viewMode, setViewMode] = useState<ViewMode>("marker")
+  const [sidebarOpen, setSidebarOpen] = useState(true)
+  const [mobileSheetOpen, setMobileSheetOpen] = useState(false)
 
   // Auto-collapse sidebar on narrower viewports so the map has room.
   useEffect(() => {
     function handle() {
-      if (typeof window === "undefined") return;
-      if (window.innerWidth < 1280) setSidebarOpen(false);
-      else setSidebarOpen(true);
+      if (typeof window === "undefined") return
+      if (window.innerWidth < 1280) setSidebarOpen(false)
+      else setSidebarOpen(true)
     }
-    handle();
-    window.addEventListener("resize", handle);
-    return () => window.removeEventListener("resize", handle);
-  }, []);
+    handle()
+    window.addEventListener("resize", handle)
+    return () => window.removeEventListener("resize", handle)
+  }, [])
 
   const filtered = useMemo(
     () => applyFilters(hospitals, state),
-    [hospitals, state],
-  );
+    [hospitals, state]
+  )
 
   const selectedHospital: Hospital | null = useMemo(() => {
-    if (!state.selectedId) return null;
-    return hospitals.find((h) => h.id === state.selectedId) ?? null;
-  }, [hospitals, state.selectedId]);
+    if (!state.selectedId) return null
+    return hospitals.find((h) => h.id === state.selectedId) ?? null
+  }, [hospitals, state.selectedId])
 
   function handleSelect(id: string) {
     dispatch({
       type: "SET_SELECTED",
       id: state.selectedId === id ? null : id,
-    });
+    })
   }
 
-  const resultCount = filtered.length;
+  const resultCount = filtered.length
 
   return (
     <>
@@ -121,7 +121,8 @@ export default function MapPage() {
               variant={sidebarOpen ? "default" : "outline"}
               className={cn(
                 "hidden h-7 gap-1 px-2 text-xs lg:inline-flex",
-                sidebarOpen && "bg-niramoy-teal text-white hover:bg-niramoy-teal/90",
+                sidebarOpen &&
+                  "bg-niramoy-teal text-white hover:bg-niramoy-teal/90"
               )}
               onClick={() => setSidebarOpen((v) => !v)}
               aria-pressed={sidebarOpen}
@@ -189,7 +190,7 @@ export default function MapPage() {
             </div>
 
             {/* Mobile results FAB */}
-            <div className="absolute bottom-4 right-4 z-30 lg:hidden">
+            <div className="absolute right-4 bottom-4 z-30 lg:hidden">
               <Sheet>
                 <SheetTrigger asChild>
                   <Button
@@ -225,9 +226,7 @@ export default function MapPage() {
                       userCoords={state.userCoords}
                       hoveredId={state.hoveredId}
                       selectedId={state.selectedId}
-                      onHover={(id) =>
-                        dispatch({ type: "SET_HOVERED", id })
-                      }
+                      onHover={(id) => dispatch({ type: "SET_HOVERED", id })}
                       onSelect={handleSelect}
                     />
                   </div>
@@ -258,7 +257,7 @@ export default function MapPage() {
       </main>
       <SiteFooter />
     </>
-  );
+  )
 }
 
 function ToggleButton({
@@ -267,10 +266,10 @@ function ToggleButton({
   icon,
   label,
 }: {
-  active: boolean;
-  onClick: () => void;
-  icon: React.ReactNode;
-  label: string;
+  active: boolean
+  onClick: () => void
+  icon: React.ReactNode
+  label: string
 }) {
   return (
     <Button
@@ -284,21 +283,21 @@ function ToggleButton({
         "h-6 gap-1 rounded-sm px-2 text-[11px] font-medium",
         active
           ? "bg-niramoy-teal text-white hover:bg-niramoy-teal/90 hover:text-white"
-          : "text-muted-foreground hover:text-foreground",
+          : "text-muted-foreground hover:text-foreground"
       )}
     >
       {icon}
       <span className="hidden sm:inline">{label}</span>
     </Button>
-  );
+  )
 }
 
 function HeatmapCanvas({
   hospitalCount,
   highlightDivision,
 }: {
-  hospitalCount: number;
-  highlightDivision: import("@/lib/types/hospital").BangladeshDivision | null;
+  hospitalCount: number
+  highlightDivision: import("@/lib/types/hospital").BangladeshDivision | null
 }) {
   return (
     <div className="relative h-full w-full overflow-hidden bg-sky-50 dark:bg-slate-900">
@@ -317,7 +316,7 @@ function HeatmapCanvas({
         </div>
       </div>
     </div>
-  );
+  )
 }
 
 function ResultsListBody({
@@ -328,12 +327,12 @@ function ResultsListBody({
   onHover,
   onSelect,
 }: {
-  hospitals: Hospital[];
-  userCoords: [number, number] | null;
-  hoveredId: string | null;
-  selectedId: string | null;
-  onHover: (id: string | null) => void;
-  onSelect: (id: string) => void;
+  hospitals: Hospital[]
+  userCoords: [number, number] | null
+  hoveredId: string | null
+  selectedId: string | null
+  onHover: (id: string | null) => void
+  onSelect: (id: string) => void
 }) {
   // Used by the mobile sheet — reuses the same logic as the desktop sidebar
   // but inside the sheet content. Same component, no separate props.
@@ -347,5 +346,5 @@ function ResultsListBody({
       onSelect={onSelect}
       onClose={() => {}}
     />
-  );
+  )
 }

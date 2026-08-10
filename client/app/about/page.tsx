@@ -527,7 +527,7 @@ export default function AboutPage() {
                   team can log in and update bed counts in real time.
                 </p>
                 <Button asChild size="sm" className="mt-auto w-fit bg-niramoy-teal text-white hover:bg-niramoy-teal/90">
-                  <Link href="/register-hospital">Start registration</Link>
+                  <Link href="/register">Start registration</Link>
                 </Button>
               </Card>
 
