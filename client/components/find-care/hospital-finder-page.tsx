@@ -1,4 +1,4 @@
-"use client";
+"use client"
 
 /**
  * Top-level page for Find-a-Hospital.
@@ -10,45 +10,45 @@
  * result list sees the filtered array via useDeferredValue.
  */
 
-import { useMemo, useReducer } from "react";
-import { useHospitalStore } from "@/lib/use-hospital-store";
+import { useMemo, useReducer } from "react"
+import { useHospitalStore } from "@/lib/use-hospital-store"
 import {
   INITIAL_FILTER_STATE,
   applyFilters,
   filterReducer,
-} from "@/app/app/find-care/filters";
-import { LeftPanel } from "@/components/find-care/left-panel";
-import { HospitalMap } from "@/components/find-care/hospital-map";
-import { MobileDrawerTrigger } from "@/components/find-care/mobile-drawer-trigger";
-import type { Hospital } from "@/lib/types/hospital";
+} from "@/lib/filters"
+import { LeftPanel } from "@/components/find-care/left-panel"
+import { HospitalMap } from "@/components/find-care/hospital-map"
+import { MobileDrawerTrigger } from "@/components/find-care/mobile-drawer-trigger"
+import type { Hospital } from "@/lib/types/hospital"
 
 export default function HospitalFinderPage() {
-  const { hospitals, stats } = useHospitalStore();
-  const [state, dispatch] = useReducer(filterReducer, INITIAL_FILTER_STATE);
+  const { hospitals, stats } = useHospitalStore()
+  const [state, dispatch] = useReducer(filterReducer, INITIAL_FILTER_STATE)
 
   // Filtered + sorted array — single source of truth for both list and map.
   const filtered = useMemo(
     () => applyFilters(hospitals, state),
-    [hospitals, state],
-  );
+    [hospitals, state]
+  )
 
   // The hospital currently showing in the popup. Lives in state so the
   // close-handler can clear it.
   const selectedHospital: Hospital | null = useMemo(() => {
-    if (!state.selectedId) return null;
-    return hospitals.find((h) => h.id === state.selectedId) ?? null;
-  }, [hospitals, state.selectedId]);
+    if (!state.selectedId) return null
+    return hospitals.find((h) => h.id === state.selectedId) ?? null
+  }, [hospitals, state.selectedId])
 
   // Hover/select handlers — dispatch to the reducer so they're a stable
   // identity the map can use without re-rendering on every render.
   function handleHover(id: string | null) {
-    dispatch({ type: "SET_HOVERED", id });
+    dispatch({ type: "SET_HOVERED", id })
   }
   function handleSelect(id: string) {
     if (state.selectedId === id) {
-      dispatch({ type: "SET_SELECTED", id: null });
+      dispatch({ type: "SET_SELECTED", id: null })
     } else {
-      dispatch({ type: "SET_SELECTED", id });
+      dispatch({ type: "SET_SELECTED", id })
     }
   }
 
@@ -91,5 +91,5 @@ export default function HospitalFinderPage() {
         />
       </div>
     </div>
-  );
+  )
 }

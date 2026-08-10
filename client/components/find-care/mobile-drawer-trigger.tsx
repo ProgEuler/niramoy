@@ -1,8 +1,8 @@
-"use client";
+"use client"
 
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { useState } from "react"
+import { Button } from "@/components/ui/button"
+import { Badge } from "@/components/ui/badge"
 import {
   Sheet,
   SheetContent,
@@ -10,23 +10,20 @@ import {
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from "@/components/ui/sheet";
-import { IconFilter, IconX } from "@tabler/icons-react";
-import { LeftPanel } from "@/components/find-care/left-panel";
-import type {
-  FilterAction,
-  FilterState,
-} from "@/app/app/find-care/filters";
-import type { Hospital, HospitalStats } from "@/lib/types/hospital";
+} from "@/components/ui/sheet"
+import { IconFilter, IconX } from "@tabler/icons-react"
+import { LeftPanel } from "@/components/find-care/left-panel"
+import type { FilterAction, FilterState } from "@/lib/filters"
+import type { Hospital, HospitalStats } from "@/lib/types/hospital"
 
 interface Props {
-  state: FilterState;
-  dispatch: React.Dispatch<FilterAction>;
-  stats: HospitalStats;
-  filtered: Hospital[];
-  resultCount: number;
-  onHover: (id: string | null) => void;
-  onSelect: (id: string) => void;
+  state: FilterState
+  dispatch: React.Dispatch<FilterAction>
+  stats: HospitalStats
+  filtered: Hospital[]
+  resultCount: number
+  onHover: (id: string | null) => void
+  onSelect: (id: string) => void
 }
 
 export function MobileDrawerTrigger({
@@ -38,7 +35,7 @@ export function MobileDrawerTrigger({
   onHover,
   onSelect,
 }: Props) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(false)
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -46,7 +43,7 @@ export function MobileDrawerTrigger({
         <Button
           type="button"
           size="icon-lg"
-          className="fixed bottom-4 right-4 z-30 rounded-full bg-niramoy-teal text-white shadow-lg hover:bg-niramoy-teal/90 lg:hidden"
+          className="fixed right-4 bottom-4 z-30 rounded-full bg-niramoy-teal text-white shadow-lg hover:bg-niramoy-teal/90 lg:hidden"
           aria-label="Open filters and results"
         >
           <IconFilter />
@@ -95,5 +92,5 @@ export function MobileDrawerTrigger({
         </div>
       </SheetContent>
     </Sheet>
-  );
+  )
 }

@@ -1,10 +1,10 @@
-"use client";
+"use client"
 
-import { Button } from "@/components/ui/button";
-import type { FilterAction } from "@/app/app/find-care/filters";
+import { Button } from "@/components/ui/button"
+import type { FilterAction } from "@/lib/filters"
 
 interface Props {
-  dispatch: React.Dispatch<FilterAction>;
+  dispatch: React.Dispatch<FilterAction>
 }
 
 export function ClearFiltersButton({ dispatch }: Props) {
@@ -15,12 +15,12 @@ export function ClearFiltersButton({ dispatch }: Props) {
       size="sm"
       className="h-auto p-0 text-xs text-muted-foreground"
       onClick={() => {
-        dispatch({ type: "CLEAR_ALL" });
-        dispatch({ type: "SET_GEO_STATUS", status: "idle" });
-        dispatch({ type: "SET_USER_COORDS", coords: null });
+        dispatch({ type: "CLEAR_ALL" })
+        dispatch({ type: "SET_GEO_STATUS", status: "idle" })
+        dispatch({ type: "SET_USER_COORDS", coords: null })
       }}
     >
       Clear all filters
     </Button>
-  );
+  )
 }

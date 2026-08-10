@@ -1,146 +1,129 @@
-import os
-from dotenv import load_dotenv
-from fastapi import FastAPI, Depends, HTTPException, status
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials, OAuth2PasswordRequestForm
-from sqlalchemy.orm import Session
-from datetime import timedelta
+"""
+Niramoy FastAPI entrypoint.
 
-from .database import SessionLocal
-from .models import User
-from .schemas import UserCreate, UserOut, Token, TokenData
-from .auth import (
-    hash_password,
-    verify_password,
-    create_access_token,
-    decode_access_token,
-    ACCESS_TOKEN_EXPIRE_MINUTES
-)
+Wires CORS, routers, the WebSocket ConnectionManager singleton, and the
+async DB lifecycle.
+"""
 
-load_dotenv()
+from __future__ import annotations
 
-# Create FastAPI application
-app = FastAPI(
-    title=os.getenv("APP_NAME", "FastAPI Lab 4"),
-    description="JWT Authentication with FastAPI and PostgreSQL",
-    version="1.0.0"
-)
+import logging
+from contextlib import asynccontextmanager
+from typing import Any
 
-# HTTPBearer scheme for token authentication
-security = HTTPBearer()
+from fastapi import FastAPI, Request, status
+from fastapi.exceptions import RequestValidationError
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+
+from .core.config import settings
+from .database import engine
+from .routers import auth, hospital_admin, public, system_admin, websocket
+from .services import notification_service
 
 
-# Dependency: Database session
-def get_db():
-    db = SessionLocal()
+logger = logging.getLogger(__name__)
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Startup / shutdown hooks."""
+    # Wire the WebSocket manager so service code can broadcast events.
+    notification_service.set_manager(websocket.manager)
+    logger.info("Niramoy backend starting up")
     try:
-        yield db
+        yield
     finally:
-        db.close()
+        logger.info("Niramoy backend shutting down")
+        await engine.dispose()
 
 
-# Dependency: Get current authenticated user
-def get_current_user(
-    credentials: HTTPAuthorizationCredentials = Depends(security),
-    db: Session = Depends(get_db)
-) -> User:
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
-        headers={"WWW-Authenticate": "Bearer"},
+def create_app() -> FastAPI:
+    app = FastAPI(
+        title=settings.app_name,
+        version=settings.app_version,
+        description=(
+            "Real-time ICU/NICU/CCU/HDU bed availability aggregator for "
+            "hospitals in Bangladesh."
+        ),
+        lifespan=lifespan,
     )
 
-    # Extract token from credentials
-    token = credentials.credentials
-
-    # Decode token
-    email = decode_access_token(token)
-    if email is None:
-        raise credentials_exception
-
-    # Get user from database
-    user = db.query(User).filter(User.email == email).first()
-    if user is None:
-        raise credentials_exception
-
-    return user
-
-
-@app.get("/ping")
-def ping():
-    return {"status": "ok", "message": "pong"}
-
-
-@app.post("/auth/signup", response_model=UserOut, status_code=status.HTTP_201_CREATED)
-def signup(user_data: UserCreate, db: Session = Depends(get_db)):
-    # Check if user already exists
-    existing_user = db.query(User).filter(
-        (User.email == user_data.email) | (User.username == user_data.username)
-    ).first()
-
-    if existing_user:
-        if existing_user.email == user_data.email:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Email already registered"
-            )
-        else:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Username already taken"
-            )
-
-    # Hash password
-    hashed_password = hash_password(user_data.password)
-
-    # Create user
-    new_user = User(
-        email=user_data.email,
-        username=user_data.username,
-        password_hash=hashed_password
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=settings.cors_origins,
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
     )
 
-    db.add(new_user)
-    db.commit()
-    db.refresh(new_user)
+    # REST routers
+    app.include_router(auth.router)
+    app.include_router(public.router)
+    app.include_router(hospital_admin.router)
+    app.include_router(system_admin.router)
 
-    return new_user
+    # WebSocket
+    app.include_router(websocket.router)
 
+    @app.exception_handler(RequestValidationError)
+    async def _validation_handler(
+        request: Request, exc: RequestValidationError
+    ) -> JSONResponse:
+        """Return a structured 422 envelope so the client can map errors
+        to specific form fields.
 
-@app.post("/auth/login", response_model=Token)
-def login(
-    form_data: OAuth2PasswordRequestForm = Depends(),
-    db: Session = Depends(get_db)
-):
-    # Find user by username
-    user = db.query(User).filter(User.username == form_data.username).first()
+        Shape::
 
-    # Check if user exists and password is correct
-    if not user or not verify_password(form_data.password, user.password_hash):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect username or password",
-            headers={"WWW-Authenticate": "Bearer"},
+            {
+              "detail": "Validation failed",
+              "errors": [
+                {"field": "admin_email", "message": "...", "code": "..."},
+                ...
+              ]
+            }
+        """
+        errors: list[dict[str, Any]] = []
+        for err in exc.errors():
+            raw_loc = list(err.get("loc", []))
+            # Drop the leading "body" marker and the trailing "[key]" that
+            # Pydantic emits for dict-key validation errors.
+            cleaned = [
+                str(p)
+                for p in raw_loc
+                if p != "body" and not (isinstance(p, str) and p == "[key]")
+            ]
+            field = ".".join(cleaned) if cleaned else "_root"
+
+            raw_msg = err.get("msg", "Invalid value")
+            # Pydantic prefixes model_validator messages with "Value error, ".
+            msg = raw_msg.removeprefix("Value error, ")
+
+            errors.append(
+                {
+                    "field": field,
+                    "message": msg,
+                    "code": err.get("type", "validation_error"),
+                }
+            )
+        return JSONResponse(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            content={"detail": "Validation failed", "errors": errors},
         )
 
-    # Create access token
-    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = create_access_token(
-        data={"sub": user.email},
-        expires_delta=access_token_expires
-    )
+    @app.get("/ping", tags=["meta"])
+    async def ping():
+        return {"status": "ok", "message": "pong"}
 
-    return {"access_token": access_token, "token_type": "bearer"}
+    @app.get("/", tags=["meta"])
+    async def root():
+        return {
+            "name": settings.app_name,
+            "version": settings.app_version,
+            "docs": "/docs",
+        }
+
+    return app
 
 
-@app.get("/profile", response_model=UserOut)
-def get_profile(current_user: User = Depends(get_current_user)):
-    return current_user
-
-
-@app.get("/users", response_model=list[UserOut])
-def get_users(
-    current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
-):
-    users = db.query(User).all()
-    return users
+app = create_app()

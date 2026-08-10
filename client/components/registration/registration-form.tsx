@@ -3,17 +3,13 @@
 /**
  * Hospital Registration form. The full spec:
  *   - Hospital full name
- *   - Division + District dropdowns (cascading)
+ *   - Division + District dropdowns (cascading — static lookup table)
  *   - Full address
  *   - Map pin picker — drag pin to precise location
  *   - Emergency + general phone
  *   - Facility type checkboxes (ICU / NICU / CCU / HDU) + capacity per type
  *   - Admin contact name + email + password
- *   - Submit → post-submit status banner
- *
- * Validates client-side, then runs an optimistic submit and renders the
- * confirmation banner. Real backend (POST /api/hospitals/register) can be
- * dropped in by replacing the `submitRegistration` body.
+ *   - Submit → POST /api/auth/register → post-submit status banner
  */
 
 import { useEffect, useMemo, useState } from "react";
@@ -37,81 +33,158 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Map, MapMarker, MarkerContent, MapControls } from "@/components/ui/map";
-import { useDistricts } from "@/lib/use-districts";
+import { useRegisterHospital } from "@/lib/auth/hooks";
+import { ApiError } from "@/lib/api/client";
 import { cn } from "@/lib/utils";
+import type { FacilityType } from "@/lib/api/auth";
 import {
-  ALL_BED_TYPES,
   ALL_DIVISIONS,
   type BangladeshDivision,
-  type BedType,
 } from "@/lib/types/hospital";
+import { DIVISION_DISTRICTS } from "@/lib/use-districts";
 
 interface FormState {
   name: string;
-  division: BangladeshDivision | "all";
+  division: BangladeshDivision | null;
   district: string;
   address: string;
   lat: number;
   lng: number;
   emergencyPhone: string;
   generalPhone: string;
-  facilityTypes: BedType[];
-  capacity: Record<BedType, number>;
+  facilityTypes: FacilityType[];
+  capacity: Record<FacilityType, number>;
   adminName: string;
   adminEmail: string;
   password: string;
 }
 
-const DEFAULT_CENTER: [number, number] = [90.399, 23.777];
+const DEFAULT_LAT = 23.777;
+const DEFAULT_LNG = 90.399;
 
 const INITIAL: FormState = {
   name: "",
-  division: "all",
+  division: null,
   district: "",
   address: "",
-  lat: DEFAULT_CENTER[1],
-  lng: DEFAULT_CENTER[0],
+  lat: DEFAULT_LAT,
+  lng: DEFAULT_LNG,
   emergencyPhone: "",
   generalPhone: "",
   facilityTypes: [],
-  capacity: { icu: 0, nicu: 0, ccu: 0, hdu: 0 },
+  capacity: { ICU: 0, NICU: 0, CCU: 0, HDU: 0 },
   adminName: "",
   adminEmail: "",
   password: "",
 };
 
-const BED_LABEL: Record<BedType, string> = {
-  icu: "ICU",
-  nicu: "NICU",
-  ccu: "CCU",
-  hdu: "HDU",
+const BED_LABEL: Record<FacilityType, string> = {
+  ICU: "ICU",
+  NICU: "NICU",
+  CCU: "CCU",
+  HDU: "HDU",
 };
+
+const ALL_FACILITIES: readonly FacilityType[] = ["ICU", "NICU", "CCU", "HDU"];
 
 export function RegistrationForm() {
   const [form, setForm] = useState<FormState>(INITIAL);
-  const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [errors, setErrors] = useState<Partial<Record<keyof FormState, string>>>(
     {},
   );
+  const [banner, setBanner] = useState<string | null>(null);
 
-  const districts = useDistricts(form.division);
+  const districts = useMemo(
+    () => (form.division ? DIVISION_DISTRICTS[form.division] : []),
+    [form.division],
+  );
 
-  // Reset district if division changes.
   useEffect(() => {
     setForm((f) => ({ ...f, district: "" }));
   }, [form.division]);
 
   const enabledTypes = useMemo(
-    () => new Set<BedType>(form.facilityTypes),
+    () => new Set<FacilityType>(form.facilityTypes),
     [form.facilityTypes],
   );
+
+  const register = useRegisterHospital({
+    onSuccess: () => {
+      setErrors({});
+      setBanner(null);
+      setSubmitted(true);
+    },
+    onError: (err: unknown) => {
+      setErrors({});
+      setBanner(null);
+      if (err instanceof ApiError) {
+        const fieldErrs = err.fieldErrors;
+        if (fieldErrs.length > 0) {
+          const next: Partial<Record<keyof FormState, string>> = {};
+          const unmapped: string[] = [];
+          for (const fe of fieldErrs) {
+            const mapped = mapFieldError(fe.field);
+            if (mapped) {
+              next[mapped] = fe.message;
+            } else {
+              unmapped.push(fe.message);
+            }
+          }
+          setErrors(next);
+          if (unmapped.length > 0) setBanner(unmapped.join(" • "));
+          return;
+        }
+        // No structured field errors — try the server's X-Error-Field hint.
+        if (err.field) {
+          const mapped = mapFieldError(err.field);
+          if (mapped) {
+            setErrors({ [mapped]: err.detail });
+            return;
+          }
+        }
+        setBanner(err.detail || "Submission failed. Please try again.");
+        return;
+      }
+      setBanner("Network error. Please try again.");
+    },
+  });
+
+  function mapFieldError(field: string): keyof FormState | null {
+    switch (field) {
+      case "hospital_name":
+        return "name";
+      case "district_name":
+        return "district";
+      case "address":
+        return "address";
+      case "phone_emergency":
+        return "emergencyPhone";
+      case "phone_general":
+        return "generalPhone";
+      case "lat":
+      case "lng":
+        return null;
+      case "facility_types":
+        return "facilityTypes";
+      case "capacities":
+        return "facilityTypes";
+      case "admin_name":
+        return "adminName";
+      case "admin_email":
+        return "adminEmail";
+      case "admin_password":
+        return "password";
+      default:
+        return null;
+    }
+  }
 
   function update<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((f) => ({ ...f, [key]: value }));
   }
 
-  function toggleFacility(t: BedType) {
+  function toggleFacility(t: FacilityType) {
     setForm((f) => {
       const has = f.facilityTypes.includes(t);
       return {
@@ -130,8 +203,7 @@ export function RegistrationForm() {
   function validate(): boolean {
     const next: typeof errors = {};
     if (!form.name.trim()) next.name = "Hospital name is required";
-    if (form.division === "all")
-      next.division = "Please pick a division";
+    if (form.division == null) next.division = "Please pick a division";
     if (!form.district) next.district = "Please pick a district";
     if (!form.address.trim()) next.address = "Address is required";
     if (!form.emergencyPhone.trim())
@@ -148,15 +220,33 @@ export function RegistrationForm() {
     return Object.keys(next).length === 0;
   }
 
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!validate()) return;
-    setSubmitting(true);
-    // Stand-in for POST /api/hospitals/register. Real impl would send
-    // { ...form } and show success based on response.
-    await new Promise((r) => setTimeout(r, 800));
-    setSubmitting(false);
-    setSubmitted(true);
+
+    // Only send capacities for the selected facility types — the server
+    // rejects extras and the structured 422 is unhelpful for normal usage.
+    const filteredCapacities = form.facilityTypes.reduce<
+      Partial<Record<FacilityType, number>>
+    >((acc, t) => {
+      acc[t] = form.capacity[t] ?? 0;
+      return acc;
+    }, {});
+
+    register.mutate({
+      hospital_name: form.name.trim(),
+      district_name: form.district,
+      address: form.address.trim(),
+      phone_emergency: form.emergencyPhone.trim() || null,
+      phone_general: form.generalPhone.trim() || null,
+      lat: form.lat,
+      lng: form.lng,
+      facility_types: form.facilityTypes,
+      capacities: filteredCapacities as Record<FacilityType, number>,
+      admin_name: form.adminName.trim(),
+      admin_email: form.adminEmail.trim(),
+      admin_password: form.password,
+    });
   }
 
   if (submitted) {
@@ -165,6 +255,14 @@ export function RegistrationForm() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+      {banner && (
+        <div
+          role="alert"
+          className="rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2 text-[12px] text-destructive"
+        >
+          {banner}
+        </div>
+      )}
       <Section title="Hospital details" icon={<IconBuildingHospital className="size-4" />}>
         <Field
           label="Hospital full name"
@@ -182,10 +280,8 @@ export function RegistrationForm() {
         <div className="grid gap-3 sm:grid-cols-2">
           <Field label="Division" error={errors.division}>
             <Select
-              value={form.division}
-              onValueChange={(v) =>
-                update("division", v as BangladeshDivision | "all")
-              }
+              value={form.division ?? ""}
+              onValueChange={(v) => update("division", v as BangladeshDivision)}
             >
               <SelectTrigger
                 className="h-9 w-full"
@@ -205,7 +301,7 @@ export function RegistrationForm() {
           <Field label="District" error={errors.district}>
             <Select
               value={form.district}
-              disabled={form.division === "all"}
+              disabled={form.division == null}
               onValueChange={(v) => update("district", v)}
             >
               <SelectTrigger
@@ -214,7 +310,9 @@ export function RegistrationForm() {
               >
                 <SelectValue
                   placeholder={
-                    form.division === "all" ? "Pick a division first" : "Choose a district"
+                    form.division == null
+                      ? "Pick a division first"
+                      : "Choose a district"
                   }
                 />
               </SelectTrigger>
@@ -297,7 +395,7 @@ export function RegistrationForm() {
         error={errors.facilityTypes}
       >
         <ul className="space-y-2">
-          {ALL_BED_TYPES.map((t) => {
+          {ALL_FACILITIES.map((t) => {
             const on = enabledTypes.has(t);
             return (
               <li
@@ -383,10 +481,10 @@ export function RegistrationForm() {
         </p>
         <Button
           type="submit"
-          disabled={submitting}
+          disabled={register.isPending}
           className="h-10 gap-1.5 bg-niramoy-teal px-5 text-sm text-white hover:bg-niramoy-teal/90"
         >
-          {submitting ? (
+          {register.isPending ? (
             <>
               <IconLoader2 className="size-4 animate-spin" />
               Submitting…

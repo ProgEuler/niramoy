@@ -2,15 +2,20 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { DecorIcon } from "@/components/decor-icon";
-import { AppBreadcrumbs } from "@/components/app-breadcrumbs";
-import { navLinks } from "@/components/app-shared";
+import { AppBreadcrumbs, type AppBreadcrumbPage } from "@/components/app-breadcrumbs";
 import { CustomSidebarTrigger } from "@/components/custom-sidebar-trigger";
 import { NavUser } from "@/components/nav-user";
 import { IconSend, IconBell } from "@tabler/icons-react";
 
-const activeItem = navLinks.find((item) => item.isActive);
+export interface AppHeaderProps {
+	page?: AppBreadcrumbPage | null;
+}
 
-export function AppHeader() {
+/**
+ * Sticky dashboard header — sidebar trigger, breadcrumbs derived from the
+ * current route, notification/inbox actions, and the signed-in user menu.
+ */
+export function AppHeader({ page }: AppHeaderProps) {
 	return (
 		<header
 			className={cn(
@@ -25,17 +30,15 @@ export function AppHeader() {
 					className="mr-2 h-4 data-[orientation=vertical]:self-center"
 					orientation="vertical"
 				/>
-				<AppBreadcrumbs page={activeItem} />
+				<AppBreadcrumbs page={page} />
 			</div>
 			<div className="flex items-center gap-3">
-				<Button size="icon-sm" variant="outline">
-					<IconSend
-					/>
+				{/* <Button size="icon-sm" variant="outline">
+					<IconSend />
 				</Button>
 				<Button aria-label="Notifications" size="icon-sm" variant="outline">
-					<IconBell
-					/>
-				</Button>
+					<IconBell />
+				</Button> */}
 				<Separator
 					className="h-4 data-[orientation=vertical]:self-center"
 					orientation="vertical"

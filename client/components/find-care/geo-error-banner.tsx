@@ -1,10 +1,10 @@
-"use client";
+"use client"
 
-import { IconAlertTriangle } from "@tabler/icons-react";
-import type { GeoStatus } from "@/app/app/find-care/filters";
+import { IconAlertTriangle } from "@tabler/icons-react"
+import type { GeoStatus } from "@/lib/filters"
 
 interface Props {
-  geoStatus: GeoStatus;
+  geoStatus: GeoStatus
 }
 
 export function GeoErrorBanner({ geoStatus }: Props) {
@@ -13,16 +13,16 @@ export function GeoErrorBanner({ geoStatus }: Props) {
       <Banner>
         Location permission denied. Search by division / district instead.
       </Banner>
-    );
+    )
   }
   if (geoStatus === "error") {
     return (
       <Banner>
         Couldn’t access your location. Search by division / district instead.
       </Banner>
-    );
+    )
   }
-  return null;
+  return null
 }
 
 function Banner({ children }: { children: React.ReactNode }) {
@@ -34,5 +34,5 @@ function Banner({ children }: { children: React.ReactNode }) {
       <IconAlertTriangle className="mt-0.5 size-3.5 shrink-0" />
       <span>{children}</span>
     </div>
-  );
+  )
 }

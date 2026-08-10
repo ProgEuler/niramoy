@@ -1,29 +1,47 @@
-import os
-from dotenv import load_dotenv
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, DeclarativeBase
+"""
+Async SQLAlchemy 2.0 engine + session factory.
+"""
 
-# Load environment variables from .env file
-load_dotenv()
-DATABASE_URL = os.getenv("DATABASE_URL")
+from __future__ import annotations
 
-# Base class for all models
+from typing import AsyncGenerator
+
+from sqlalchemy.ext.asyncio import (
+    AsyncSession,
+    async_sessionmaker,
+    create_async_engine,
+)
+from sqlalchemy.orm import DeclarativeBase
+
+from .core.config import settings
+
+
 class Base(DeclarativeBase):
+    """Single declarative base for all ORM models."""
     pass
 
-# Create database engine
-# echo=True would print all SQL queries (useful for debugging)
-engine = create_engine(
-    DATABASE_URL,
-    echo=False,          # Set to True to see SQL queries
-    future=True          # Use SQLAlchemy 2.0 style
+
+# echo=False in prod; flip via settings.debug if you want SQL spam.
+engine = create_async_engine(
+    settings.database_url,
+    echo=settings.debug,
+    pool_pre_ping=True,
+    future=True,
 )
 
-# Create session factory
-# Sessions are your "workspace" for database operations
-SessionLocal = sessionmaker(
+AsyncSessionLocal: async_sessionmaker[AsyncSession] = async_sessionmaker(
     bind=engine,
-    autoflush=False,     # Don't automatically flush changes
-    autocommit=False,    # Don't automatically commit
-    future=True          # Use SQLAlchemy 2.0 style
+    expire_on_commit=False,
+    autoflush=False,
+    autocommit=False,
+    class_=AsyncSession,
 )
+
+
+async def get_db() -> AsyncGenerator[AsyncSession, None]:
+    """FastAPI dependency — yields an async session, ensures cleanup."""
+    async with AsyncSessionLocal() as session:
+        try:
+            yield session
+        finally:
+            await session.close()

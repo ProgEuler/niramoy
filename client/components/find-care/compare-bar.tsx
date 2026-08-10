@@ -1,4 +1,4 @@
-"use client";
+"use client"
 
 /**
  * Sticky bottom bar that appears when 2+ hospitals are selected for
@@ -9,26 +9,26 @@
  * narrow viewports; pills truncate with ellipsis rather than wrap.
  */
 
-import Link from "next/link";
-import { IconArrowsHorizontal, IconX } from "@tabler/icons-react";
-import { Button } from "@/components/ui/button";
-import { useHospitalStore } from "@/lib/use-hospital-store";
-import { MAX_COMPARE } from "@/app/app/find-care/filters";
+import Link from "next/link"
+import { IconArrowsHorizontal, IconX } from "@tabler/icons-react"
+import { Button } from "@/components/ui/button"
+import { useHospitalStore } from "@/lib/use-hospital-store"
+import { MAX_COMPARE } from "@/lib/filters"
 
 interface Props {
-  compareIds: string[];
-  onRemove: (id: string) => void;
+  compareIds: string[]
+  onRemove: (id: string) => void
 }
 
 export function CompareBar({ compareIds, onRemove }: Props) {
-  const { hospitals } = useHospitalStore();
-  if (compareIds.length < 2) return null;
+  const { hospitals } = useHospitalStore()
+  if (compareIds.length < 2) return null
 
   const selected = compareIds
     .map((id) => hospitals.find((h) => h.id === id))
-    .filter((h): h is NonNullable<typeof h> => Boolean(h));
+    .filter((h): h is NonNullable<typeof h> => Boolean(h))
 
-  const compareHref = `/compare?ids=${compareIds.join(",")}`;
+  const compareHref = `/compare?ids=${compareIds.join(",")}`
 
   return (
     <div
@@ -44,7 +44,7 @@ export function CompareBar({ compareIds, onRemove }: Props) {
           {selected.map((h) => (
             <li
               key={h.id}
-              className="inline-flex max-w-[200px] items-center gap-1 rounded-full border bg-muted/50 py-0.5 pl-2.5 pr-1 text-[11px] font-medium"
+              className="inline-flex max-w-[200px] items-center gap-1 rounded-full border bg-muted/50 py-0.5 pr-1 pl-2.5 text-[11px] font-medium"
             >
               <span className="truncate">{h.name}</span>
               <button
@@ -70,5 +70,5 @@ export function CompareBar({ compareIds, onRemove }: Props) {
         </Button>
       </div>
     </div>
-  );
+  )
 }

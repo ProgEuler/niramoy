@@ -1,4 +1,4 @@
-"use client";
+"use client"
 
 import {
   Select,
@@ -6,20 +6,20 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { useDistricts } from "@/lib/use-districts";
-import type { BangladeshDivision } from "@/lib/types/hospital";
-import type { FilterAction } from "@/app/app/find-care/filters";
+} from "@/components/ui/select"
+import { useDistricts } from "@/lib/use-districts"
+import type { BangladeshDivision } from "@/lib/types/hospital"
+import type { FilterAction } from "@/lib/filters"
 
 interface Props {
-  division: BangladeshDivision | "all";
-  value: string;
-  dispatch: React.Dispatch<FilterAction>;
+  division: BangladeshDivision | "all"
+  value: string
+  dispatch: React.Dispatch<FilterAction>
 }
 
 export function DistrictSelect({ division, value, dispatch }: Props) {
-  const districts = useDistricts(division);
-  const disabled = division === "all";
+  const districts = useDistricts(division)
+  const disabled = division === "all"
 
   return (
     <Select
@@ -41,5 +41,5 @@ export function DistrictSelect({ division, value, dispatch }: Props) {
         ))}
       </SelectContent>
     </Select>
-  );
+  )
 }
