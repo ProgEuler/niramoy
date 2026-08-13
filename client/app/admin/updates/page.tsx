@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Link from "next/link";
 import {
   IconArrowLeft,
@@ -64,6 +64,7 @@ export default function ModerationQueuePage() {
   const [page, setPage] = useState(1);
   const [rejectTarget, setRejectTarget] = useState<UpdateHistoryRow | null>(null);
   const [rejectReason, setRejectReason] = useState("");
+  const [selected, setSelected] = useState<Set<number>>(new Set());
 
   const { data, isLoading, isFetching } = useAdminUpdates({
     page,
@@ -78,6 +79,46 @@ export default function ModerationQueuePage() {
   const updates = data?.data ?? [];
   const totalPages = data?.total_pages ?? 1;
   const totalCount = data?.total_count ?? 0;
+
+  // Only Pending rows are eligible for bulk approve.
+  const pendingIds = useMemo(
+    () => updates.filter((u) => u.status === "Pending").map((u) => u.id),
+    [updates],
+  );
+  const allSelected = pendingIds.length > 0 && pendingIds.every((id) => selected.has(id));
+  const someSelected = pendingIds.some((id) => selected.has(id));
+
+  function toggleAll() {
+    if (allSelected) {
+      setSelected((prev) => {
+        const next = new Set(prev);
+        for (const id of pendingIds) next.delete(id);
+        return next;
+      });
+    } else {
+      setSelected((prev) => new Set([...prev, ...pendingIds]));
+    }
+  }
+
+  function toggleOne(id: number) {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  function clearSelection() {
+    setSelected(new Set());
+  }
+
+  function handleBulkApprove() {
+    const ids = Array.from(selected);
+    if (ids.length === 0) return;
+    ids.forEach((id) => approve.mutate({ id }));
+    clearSelection();
+  }
 
   function handleReject() {
     if (!rejectTarget || !rejectReason.trim()) return;
@@ -95,6 +136,18 @@ export default function ModerationQueuePage() {
   return (
     <>
       <div className="flex-1 space-y-4 p-4 sm:p-6">
+        {/* Page title */}
+        <div className="flex flex-wrap items-baseline justify-between gap-2">
+          <div>
+            <h1 className="font-heading text-xl font-semibold tracking-tight">
+              Moderation queue
+            </h1>
+            <p className="text-xs text-muted-foreground">
+              Updates submitted by hospital admins that need platform review.
+            </p>
+          </div>
+        </div>
+
         {/* Filter bar */}
         <Card>
           <CardContent className="flex flex-wrap items-center gap-3 p-4">
@@ -140,6 +193,43 @@ export default function ModerationQueuePage() {
           </CardContent>
         </Card>
 
+        {/* Bulk approve bar */}
+        {someSelected && (
+          <div className="flex items-center justify-between gap-2 rounded-md border border-niramoy-teal/30 bg-niramoy-teal/5 px-3 py-2 text-xs">
+            <span className="text-muted-foreground">
+              <span className="font-semibold text-foreground">
+                {selected.size}
+              </span>{" "}
+              pending update{selected.size !== 1 ? "s" : ""} selected
+            </span>
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                size="sm"
+                variant="ghost"
+                className="h-7"
+                onClick={clearSelection}
+              >
+                Clear
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                disabled={approve.isPending}
+                onClick={handleBulkApprove}
+                className="h-7 gap-1 bg-emerald-500 text-white hover:bg-emerald-600"
+              >
+                {approve.isPending ? (
+                  <IconLoader2 className="size-3 animate-spin" />
+                ) : (
+                  <IconCircleCheck className="size-3.5" />
+                )}
+                Approve Selected
+              </Button>
+            </div>
+          </div>
+        )}
+
         {/* Table */}
         <Card>
           <CardContent className="p-0">
@@ -160,11 +250,23 @@ export default function ModerationQueuePage() {
                   <table className="w-full text-xs">
                     <thead className="bg-muted/40 text-[10px] uppercase tracking-wider text-muted-foreground">
                       <tr>
+                        {pendingIds.length > 0 && (
+                          <th className="w-8 px-3 py-2 text-left font-medium">
+                            <input
+                              type="checkbox"
+                              aria-label="Select all pending"
+                              checked={allSelected}
+                              onChange={toggleAll}
+                              className="size-3.5 cursor-pointer accent-niramoy-teal"
+                            />
+                          </th>
+                        )}
                         <th className="px-3 py-2 text-left font-medium">Hospital</th>
                         <th className="px-3 py-2 text-left font-medium">Type</th>
                         <th className="px-3 py-2 text-left font-medium">Field</th>
-                        <th className="px-3 py-2 text-left font-medium">Change</th>
-                        <th className="px-3 py-2 text-left font-medium">When</th>
+                        <th className="px-3 py-2 text-left font-medium">Previous → New</th>
+                        <th className="px-3 py-2 text-left font-medium">Submitted by</th>
+                        <th className="px-3 py-2 text-left font-medium">Submitted at</th>
                         <th className="px-3 py-2 text-left font-medium">Status</th>
                         <th className="px-3 py-2 text-right font-medium">Actions</th>
                       </tr>
@@ -173,8 +275,23 @@ export default function ModerationQueuePage() {
                       {updates.map((u) => (
                         <tr
                           key={u.id}
-                          className="border-t bg-card transition-colors hover:bg-muted/30"
+                          className={`border-t bg-card transition-colors hover:bg-muted/30 ${
+                            selected.has(u.id) ? "bg-niramoy-teal/5" : ""
+                          }`}
                         >
+                          {pendingIds.length > 0 && (
+                            <td className="w-8 px-3 py-2">
+                              {u.status === "Pending" && (
+                                <input
+                                  type="checkbox"
+                                  aria-label={`Select update #${u.id}`}
+                                  checked={selected.has(u.id)}
+                                  onChange={() => toggleOne(u.id)}
+                                  className="size-3.5 cursor-pointer accent-niramoy-teal"
+                                />
+                              )}
+                            </td>
+                          )}
                           <td className="px-3 py-2 font-medium text-foreground">
                             <Link
                               href={`/hospital/${u.hospital_id}`}
@@ -209,6 +326,11 @@ export default function ModerationQueuePage() {
                                 {u.new_value}
                               </span>
                             )}
+                          </td>
+                          <td className="px-3 py-2 text-muted-foreground">
+                            {u.updated_by_user_id
+                              ? `User #${u.updated_by_user_id}`
+                              : "—"}
                           </td>
                           <td className="px-3 py-2 text-muted-foreground">
                             {new Date(u.created_at).toLocaleDateString("en-US", {

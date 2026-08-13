@@ -3,6 +3,7 @@
 import { useState } from "react";
 import {
   IconArrowLeft,
+  IconBuildingHospital,
   IconCheck,
   IconChevronLeft,
   IconChevronRight,
@@ -103,6 +104,27 @@ export default function ManageUsersPage() {
     <>
 
       <div className="flex-1 space-y-4 p-4 sm:p-6">
+        {/* Page header */}
+        <div className="flex flex-wrap items-baseline justify-between gap-2">
+          <div>
+            <h1 className="font-heading text-xl font-semibold tracking-tight">
+              Users
+            </h1>
+            <p className="text-xs text-muted-foreground">
+              Every account across all roles.
+            </p>
+          </div>
+          <Button
+            type="button"
+            size="sm"
+            className="h-8 gap-1.5 bg-niramoy-teal text-white hover:bg-niramoy-teal/90"
+            onClick={() => setShowCreateDialog(true)}
+          >
+            <IconPlus className="size-3.5" />
+            Create System Admin
+          </Button>
+        </div>
+
         {/* Filters */}
         <Card>
           <CardContent className="p-4">
@@ -186,8 +208,9 @@ export default function ManageUsersPage() {
                         <th className="px-3 py-2 text-left font-medium">User</th>
                         <th className="px-3 py-2 text-left font-medium">Role</th>
                         <th className="px-3 py-2 text-left font-medium">Hospital</th>
-                        <th className="px-3 py-2 text-left font-medium">Status</th>
+                        <th className="px-3 py-2 text-left font-medium">Registered</th>
                         <th className="px-3 py-2 text-left font-medium">Last login</th>
+                        <th className="px-3 py-2 text-left font-medium">Status</th>
                         <th className="px-3 py-2 text-right font-medium">Actions</th>
                       </tr>
                     </thead>
@@ -219,6 +242,13 @@ export default function ManageUsersPage() {
                             ) : (
                               <span className="text-[10px]">—</span>
                             )}
+                          </td>
+                          <td className="px-3 py-2 text-muted-foreground tabular-nums">
+                            {new Date(u.created_at).toLocaleDateString("en-US", {
+                              year: "numeric",
+                              month: "short",
+                              day: "numeric",
+                            })}
                           </td>
                           <td className="px-3 py-2">
                             {u.is_active ? (
@@ -281,6 +311,20 @@ export default function ManageUsersPage() {
                                 <IconLock className="size-3" />
                                 Reset pw
                               </Button>
+                              {u.hospital_id && (
+                                <Button
+                                  asChild
+                                  type="button"
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-6 gap-1"
+                                  title="View linked hospital"
+                                >
+                                  <Link href={`/hospital/${u.hospital_id}`}>
+                                    <IconBuildingHospital className="size-3" />
+                                  </Link>
+                                </Button>
+                              )}
                               <Button
                                 type="button"
                                 size="sm"

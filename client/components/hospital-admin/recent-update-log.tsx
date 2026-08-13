@@ -48,7 +48,7 @@ export function RecentUpdateLog({ hospital }: Props) {
             </p>
           </div>
           <Link
-            href="/admin/hospital/history"
+            href="/management/history"
             className="inline-flex items-center gap-0.5 text-[11px] font-medium text-niramoy-teal hover:underline"
           >
             View Full History
