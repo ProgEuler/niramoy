@@ -6,7 +6,6 @@ import {
   IconAmbulance,
   IconBuildingCommunity,
   IconCheck,
-  IconCircleCheck,
   IconEdit,
   IconMap,
   IconPlus,
@@ -18,6 +17,34 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import {
+  Field,
+  FieldContent,
+  FieldLabel,
+} from "@/components/ui/field";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { AgTable } from "@/components/ag-grid/ag-table";
+import type { AgCellRenderer } from "@/components/ag-grid/type";
+import type { ColDef } from "ag-grid-community";
+import {
+  AmbulanceActionsCell,
+  DayOnlyBadgeCell,
+  PhoneCell,
+} from "@/components/ag-grid/ag-table-cells";
 import { useToasts } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
 import { DIVISION_DISTRICTS } from "@/lib/use-districts";
@@ -610,124 +637,61 @@ function AmbulanceDirectoryPanel({ ambulances }: { ambulances: Ambulance[] }) {
             No ambulances match this search.
           </p>
         ) : (
-          <div className="overflow-x-auto rounded-md border">
-            <table className="w-full text-xs">
-              <thead className="bg-muted/40 text-[10px] uppercase tracking-wider text-muted-foreground">
-                <tr>
-                  <th className="px-3 py-2 text-left font-medium">Name</th>
-                  <th className="px-3 py-2 text-left font-medium">
-                    Location
-                  </th>
-                  <th className="px-3 py-2 text-left font-medium">Type</th>
-                  <th className="px-3 py-2 text-left font-medium">Phone</th>
-                  <th className="px-3 py-2 text-left font-medium">24h</th>
-                  <th className="px-3 py-2 text-right font-medium">
-                    Actions
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {filtered.map((a) => (
-                  <tr
-                    key={a.id}
-                    className="border-t bg-card transition-colors hover:bg-muted/30"
-                  >
-                    <td className="px-3 py-2 font-medium text-foreground">
-                      {a.name}
-                    </td>
-                    <td className="px-3 py-2 text-muted-foreground">
-                      <div>{a.district}</div>
-                      <div className="text-[10px]">{a.division}</div>
-                    </td>
-                    <td className="px-3 py-2 capitalize">
-                      {a.type}
-                    </td>
-                    <td className="px-3 py-2">
-                      <a
-                        href={`tel:${a.phone.replace(/\s+/g, "")}`}
-                        className="tabular-nums text-niramoy-teal underline-offset-2 hover:underline"
-                      >
-                        {a.phone}
-                      </a>
-                    </td>
-                    <td className="px-3 py-2">
-                      {a.available24h ? (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[10px] font-semibold text-emerald-700 dark:text-emerald-400">
-                          <IconCircleCheck className="size-3" />
-                          24h
-                        </span>
-                      ) : (
-                        <span className="text-muted-foreground">Day only</span>
-                      )}
-                    </td>
-                    <td className="px-3 py-2">
-                      <div className="flex justify-end gap-1">
-                        <Button
-                          type="button"
-                          size="xs"
-                          variant="outline"
-                          onClick={() => startEdit(a)}
-                          className="h-6 gap-1"
-                        >
-                          <IconEdit className="size-3" />
-                          Edit
-                        </Button>
-                        <Button
-                          type="button"
-                          size="icon-xs"
-                          variant="ghost"
-                          onClick={() => remove(a)}
-                          aria-label={`Remove ${a.name}`}
-                          className="text-destructive hover:bg-destructive/10 hover:text-destructive"
-                        >
-                          <IconTrash className="size-3" />
-                        </Button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <AgTable<Ambulance>
+            rowData={filtered}
+            columnDefs={ambulanceColumnDefs({
+              onEdit: startEdit,
+              onRemove: remove,
+            })}
+            components={{
+              phone: PhoneCell as unknown as AgCellRenderer<Ambulance>,
+              dayOnly: DayOnlyBadgeCell as unknown as AgCellRenderer<Ambulance>,
+              ambulanceActions:
+                AmbulanceActionsCell as unknown as AgCellRenderer<Ambulance>,
+            }}
+            pagination={false}
+            height="auto"
+            noRowsText="No ambulances match this search"
+          />
         )}
       </CardContent>
       {/* Modals: mounted after the card so they sit at the end of the DOM
           but still within the layout's ToastProvider boundary. */}
-      {editing && draft && (
-        <AmbulanceModal
-          title="Edit ambulance"
-          value={draft}
-          onChange={setDraft}
-          onCancel={() => {
-            setEditing(null);
-            setDraft(null);
-          }}
-          onConfirm={saveEdit}
-        />
-      )}
-      {adding && addDraft && (
-        <AmbulanceModal
-          title="Add ambulance"
-          value={addDraft}
-          onChange={setAddDraft}
-          onCancel={() => {
-            setAdding(false);
-            setAddDraft(null);
-          }}
-          onConfirm={saveAdd}
-        />
-      )}
+      <AmbulanceModal
+        open={Boolean(editing && draft)}
+        title="Edit ambulance"
+        value={draft ?? emptyAmbulance}
+        onChange={(a) => setDraft(a)}
+        onCancel={() => {
+          setEditing(null);
+          setDraft(null);
+        }}
+        onConfirm={saveEdit}
+      />
+      <AmbulanceModal
+        open={Boolean(adding && addDraft)}
+        title="Add ambulance"
+        value={addDraft ?? emptyAmbulance}
+        onChange={(a) => setAddDraft(a)}
+        onCancel={() => {
+          setAdding(false);
+          setAddDraft(null);
+        }}
+        onConfirm={saveAdd}
+      />
     </Card>
   );
 }
 
 function AmbulanceModal({
+  open,
   title,
   value,
   onChange,
   onCancel,
   onConfirm,
 }: {
+  open: boolean;
   title: string;
   value: Ambulance;
   onChange: (a: Ambulance) => void;
@@ -735,104 +699,106 @@ function AmbulanceModal({
   onConfirm: () => void;
 }) {
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-end justify-center bg-foreground/40 backdrop-blur-sm sm:items-center"
-      role="dialog"
-      aria-modal="true"
-      aria-label={title}
-      onClick={onCancel}
-    >
-      <div
-        className="w-full max-w-md space-y-2 rounded-t-lg border bg-card p-4 shadow-lg sm:rounded-lg"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="flex items-baseline justify-between gap-2">
-          <h3 className="flex items-center gap-2 font-heading text-sm font-semibold">
+    <Dialog open={open} onOpenChange={(o) => !o && onCancel()}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
             <IconAmbulance className="size-4 text-niramoy-teal" />
             {title}
-          </h3>
-          <button
-            type="button"
-            onClick={onCancel}
-            aria-label="Close"
-            className="rounded-md p-1 text-muted-foreground hover:bg-muted"
-          >
-            <IconX className="size-3.5" />
-          </button>
-        </div>
-        <ModalField label="Name">
-          <Input
-            className="h-9"
-            value={value.name}
-            onChange={(e) => onChange({ ...value, name: e.target.value })}
-          />
-        </ModalField>
-        <div className="grid gap-2 sm:grid-cols-2">
-          <ModalField label="Division">
-            <select
-              className="h-9 w-full rounded-md border bg-input/30 px-2 text-xs"
-              value={value.division}
-              onChange={(e) =>
-                onChange({
-                  ...value,
-                  division: e.target.value as BangladeshDivision,
-                })
-              }
-            >
-              {ALL_DIVISIONS.map((d) => (
-                <option key={d} value={d}>
-                  {d}
-                </option>
-              ))}
-            </select>
-          </ModalField>
-          <ModalField label="District">
-            <Input
-              className="h-9"
-              value={value.district}
-              onChange={(e) =>
-                onChange({ ...value, district: e.target.value })
+          </DialogTitle>
+        </DialogHeader>
+
+        <div className="space-y-3">
+          <Field>
+            <FieldLabel>Name</FieldLabel>
+            <FieldContent>
+              <Input
+                className="h-9"
+                value={value.name}
+                onChange={(e) => onChange({ ...value, name: e.target.value })}
+              />
+            </FieldContent>
+          </Field>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Field>
+              <FieldLabel>Division</FieldLabel>
+              <FieldContent>
+                <Select
+                  value={value.division}
+                  onValueChange={(v) =>
+                    onChange({ ...value, division: v as BangladeshDivision })
+                  }
+                >
+                  <SelectTrigger className="h-9">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {ALL_DIVISIONS.map((d) => (
+                      <SelectItem key={d} value={d}>
+                        {d}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </FieldContent>
+            </Field>
+            <Field>
+              <FieldLabel>District</FieldLabel>
+              <FieldContent>
+                <Input
+                  className="h-9"
+                  value={value.district}
+                  onChange={(e) =>
+                    onChange({ ...value, district: e.target.value })
+                  }
+                />
+              </FieldContent>
+            </Field>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Field>
+              <FieldLabel>Type</FieldLabel>
+              <FieldContent>
+                <Select
+                  value={value.type}
+                  onValueChange={(v) =>
+                    onChange({ ...value, type: v as Ambulance["type"] })
+                  }
+                >
+                  <SelectTrigger className="h-9">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="government">Government</SelectItem>
+                    <SelectItem value="private">Private</SelectItem>
+                    <SelectItem value="ngo">NGO</SelectItem>
+                  </SelectContent>
+                </Select>
+              </FieldContent>
+            </Field>
+            <Field>
+              <FieldLabel>Phone</FieldLabel>
+              <FieldContent>
+                <Input
+                  className="h-9"
+                  value={value.phone}
+                  onChange={(e) => onChange({ ...value, phone: e.target.value })}
+                />
+              </FieldContent>
+            </Field>
+          </div>
+          <label className="inline-flex cursor-pointer items-center gap-2 text-xs">
+            <Checkbox
+              checked={value.available24h}
+              onCheckedChange={(c) =>
+                onChange({ ...value, available24h: c === true })
               }
             />
-          </ModalField>
+            Available 24 hours
+          </label>
         </div>
-        <div className="grid gap-2 sm:grid-cols-2">
-          <ModalField label="Type">
-            <select
-              className="h-9 w-full rounded-md border bg-input/30 px-2 text-xs"
-              value={value.type}
-              onChange={(e) =>
-                onChange({
-                  ...value,
-                  type: e.target.value as Ambulance["type"],
-                })
-              }
-            >
-              <option value="government">Government</option>
-              <option value="private">Private</option>
-              <option value="ngo">NGO</option>
-            </select>
-          </ModalField>
-          <ModalField label="Phone">
-            <Input
-              className="h-9"
-              value={value.phone}
-              onChange={(e) => onChange({ ...value, phone: e.target.value })}
-            />
-          </ModalField>
-        </div>
-        <label className="inline-flex cursor-pointer items-center gap-2 text-xs">
-          <input
-            type="checkbox"
-            className="size-3.5 accent-niramoy-teal"
-            checked={value.available24h}
-            onChange={(e) =>
-              onChange({ ...value, available24h: e.target.checked })
-            }
-          />
-          Available 24 hours
-        </label>
-        <div className="flex justify-end gap-2 pt-1">
+
+        <DialogFooter>
           <Button type="button" variant="ghost" size="sm" onClick={onCancel}>
             Cancel
           </Button>
@@ -845,27 +811,107 @@ function AmbulanceModal({
             <IconShieldCheck className="size-3" />
             Save
           </Button>
-        </div>
-      </div>
-    </div>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
-function ModalField({
-  label,
-  children,
+// ── Ambulance column defs ───────────────────────────────────────────────────
+
+function ambulanceColumnDefs({
+  onEdit,
+  onRemove,
 }: {
-  label: string;
-  children: React.ReactNode;
-}) {
-  return (
-    <div className="space-y-1">
-      <label className="block text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
-        {label}
-      </label>
-      {children}
-    </div>
-  );
+  onEdit: (a: Ambulance) => void;
+  onRemove: (a: Ambulance) => void;
+}): ColDef<Ambulance>[] {
+  return [
+    {
+      headerName: "Name",
+      field: "name",
+      flex: 1.4,
+      minWidth: 180,
+      cellRenderer: (params: { data?: Ambulance }) => {
+        if (!params.data) return null;
+        return (
+          <span className="font-medium text-foreground">{params.data.name}</span>
+        );
+      },
+    },
+    {
+      headerName: "Location",
+      flex: 1.2,
+      minWidth: 150,
+      cellRenderer: (params: { data?: Ambulance }) => {
+        if (!params.data) return null;
+        return (
+          <div className="text-muted-foreground">
+            <div>{params.data.district}</div>
+            <div className="text-[10px]">{params.data.division}</div>
+          </div>
+        );
+      },
+    },
+    {
+      headerName: "Type",
+      field: "type",
+      flex: 0.9,
+      minWidth: 110,
+      cellRenderer: (params: { data?: Ambulance }) => {
+        if (!params.data) return null;
+        return <span className="capitalize">{params.data.type}</span>;
+      },
+    },
+    {
+      headerName: "Phone",
+      field: "phone",
+      flex: 1.2,
+      minWidth: 140,
+      cellRenderer: (params: { data?: Ambulance }) => {
+        if (!params.data) return null;
+        return <PhoneCell value={params.data.phone} />;
+      },
+    },
+    {
+      headerName: "24h",
+      field: "available24h",
+      flex: 0.7,
+      minWidth: 90,
+      cellRenderer: (params: { data?: Ambulance }) => {
+        if (!params.data) return null;
+        return <DayOnlyBadgeCell value={params.data.available24h} />;
+      },
+    },
+    {
+      headerName: "Actions",
+      colId: "__actions",
+      flex: 1,
+      minWidth: 130,
+      pinned: "right",
+      sortable: false,
+      filter: false,
+      cellRenderer: "ambulanceActions",
+      cellRendererParams: {
+        onEdit,
+        onRemove,
+      },
+    },
+  ];
 }
 
-void IconBuildingCommunity;
+/**
+ * Placeholder passed to the (closed) modal. The modal is only rendered when
+ * `open === true`, but TypeScript wants a non-null value — and at the moment
+ * the Dialog mounts, the parent has the real `draft`/`addDraft`. We keep
+ * this fallback stable so it doesn't trigger spurious effect re-runs.
+ */
+const emptyAmbulance: Ambulance = {
+  id: "",
+  name: "",
+  division: "Dhaka",
+  district: "Dhaka",
+  phone: "",
+  type: "private",
+  available24h: false,
+};

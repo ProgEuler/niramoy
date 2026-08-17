@@ -81,6 +81,28 @@ export interface HospitalUpdatePayload {
   district?: string;
 }
 
+/**
+ * Payload for POST /api/admin/hospitals.
+ * Mirrors backend `HospitalCreate` (system-admin direct create, used for
+ * OSM imports / manual seeding).
+ */
+export interface HospitalCreatePayload {
+  name: string;
+  district: string;
+  address: string;
+  phone_emergency?: string | null;
+  phone_general?: string | null;
+  latitude?: number | null;
+  longitude?: number | null;
+  description?: string | null;
+  photo_url?: string | null;
+  osm_id?: number | null;
+  operator_name?: string | null;
+  /** FacilityType enum values (must match backend `FacilityType` values). */
+  facility_types?: ("ICU" | "NICU" | "CCU" | "HDU")[];
+  is_verified?: boolean;
+}
+
 // ── User shapes ────────────────────────────────────────────────────────
 
 export interface AdminUser {
@@ -175,6 +197,14 @@ export function updateHospital(
 
 export function deleteHospital(id: number, token: string) {
   return api.delete<void>(`/api/admin/hospitals/${id}`, { token });
+}
+
+export function createHospital(payload: HospitalCreatePayload, token: string) {
+  return api.post<{ id: number; name: string }>(
+    "/api/admin/hospitals",
+    payload,
+    { token },
+  );
 }
 
 // ── Users API ──────────────────────────────────────────────────────────

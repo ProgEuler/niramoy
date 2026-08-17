@@ -148,6 +148,37 @@ export function formatRelativeTime(iso: string, now: number = Date.now()): strin
   return new Date(iso).toLocaleDateString();
 }
 
+/**
+ * "2026-08-13 14:32" in local time. Used in dense tables (audit log) where a
+ * full ISO timestamp would be too wide.
+ */
+export function formatDateTime(iso: string): string {
+  const d = new Date(iso);
+  if (!Number.isFinite(d.getTime())) return iso;
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+
+/**
+ * Coarser-than-`formatRelativeTime` for compact audit-log display:
+ * "8s ago", "12m ago", "3h ago", "5d ago", "2mo ago". Falls back to "Ns ago"
+ * for sub-minute differences (vs `formatRelativeTime`'s "just now").
+ */
+export function relativeFromNow(iso: string, now: number = Date.now()): string {
+  const diffMs = now - new Date(iso).getTime();
+  if (!Number.isFinite(diffMs)) return iso;
+  const sec = Math.floor(diffMs / 1000);
+  if (sec < 60) return `${sec}s ago`;
+  const min = Math.floor(sec / 60);
+  if (min < 60) return `${min}m ago`;
+  const hr = Math.floor(min / 60);
+  if (hr < 24) return `${hr}h ago`;
+  const days = Math.floor(hr / 24);
+  if (days < 30) return `${days}d ago`;
+  const months = Math.floor(days / 30);
+  return `${months}mo ago`;
+}
+
 /** "৳12,000" — BDT, no decimals. */
 export function formatTaka(n: number): string {
   if (!Number.isFinite(n)) return "৳0";

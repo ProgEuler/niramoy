@@ -1,22 +1,5 @@
 "use client";
 
-/**
- * PAGE 1 — Hospital Admin Dashboard.
- *
- * Everything the admin needs to see at a glance after login:
- *   - 4 bed-count cards (ICU / NICU / CCU / HDU) with color coding
- *   - Stale-data banner if last update is > 6h ago
- *   - Quick-update widget (spinners inline)
- *   - Last updated timestamp + who made the last update
- *   - Last 5 changes log
- *   - Public-profile preview card (links out to the live public page)
- *   - Pending-approval notification if any submitted updates await system admin review
- *
- * Hospital is resolved from the auth store's `hospitalId`. Until the real
- * auth claim is wired up end-to-end, we fall back to the first verified
- * hospital in the seed data so the UI is exercisable.
- */
-
 import { useMemo } from "react";
 import Link from "next/link";
 import {
@@ -93,22 +76,6 @@ export default function ManagementDashboardPage() {
 
   return (
     <div className="flex min-h-[calc(100dvh-3.5rem)] flex-col bg-muted/20">
-      <div className="border-b bg-card px-4 py-3 sm:px-6">
-        <div className="flex flex-wrap items-baseline justify-between gap-2">
-          <div>
-            <h1 className="font-heading text-xl font-semibold tracking-tight">
-              Dashboard
-            </h1>
-            <p className="text-xs text-muted-foreground">
-              Welcome back. Here&rsquo;s the latest snapshot of {hospital.name}.
-            </p>
-          </div>
-          <span className="inline-flex items-center gap-1 rounded-full bg-niramoy-teal/10 px-2 py-0.5 text-[10px] font-semibold text-niramoy-teal">
-            <IconShieldCheck className="size-3" />
-            Hospital Admin
-          </span>
-        </div>
-      </div>
 
       <div className="flex-1 space-y-4 p-4 sm:p-6">
         {hasPendingUpdates && (
@@ -197,7 +164,6 @@ export default function ManagementDashboardPage() {
         </div>
 
         {/* Last updated by / when */}
-        <Card>
           <CardContent className="flex items-center gap-2 p-3 text-[11px] text-muted-foreground">
             <IconClock className="size-3.5 text-niramoy-teal" />
             <span>
@@ -212,7 +178,6 @@ export default function ManagementDashboardPage() {
               .
             </span>
           </CardContent>
-        </Card>
 
         <RecentUpdateLog hospital={hospital} />
       </div>

@@ -204,12 +204,16 @@ export function applyFilters(
     }
 
     // Cost match: at least one offered bed type must fall in [lo, hi]. Treat
-    // total===0 (not offered) as skip.
+    // total===0 (not offered) as skip — a hospital that hasn't recorded any
+    // bed capacity yet should still be visible, not silently dropped.
     const inRange = FREE_BED_TYPES.some((t) => {
       if (h.beds[t].total <= 0) return false;
       return h.price[t] >= lo && h.price[t] <= hi;
     });
-    if (!inRange) return false;
+    // If the hospital offers no bed types at all (e.g. freshly created, no
+    // capacity recorded yet), keep it visible rather than hiding it.
+    const offersAnyBeds = FREE_BED_TYPES.some((t) => h.beds[t].total > 0);
+    if (offersAnyBeds && !inRange) return false;
 
     return true;
   });

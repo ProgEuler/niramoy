@@ -29,6 +29,8 @@ import {
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { AgTable } from "@/components/ag-grid/ag-table";
+import type { ColDef } from "ag-grid-community";
 import { useToasts } from "@/components/ui/toast";
 import {
   STALE_THRESHOLD_MS,
@@ -254,46 +256,15 @@ export function SysAdminOverview({ hospitals }: Props) {
                 Counts and ICU availability per division.
               </p>
             </div>
-            <div className="overflow-x-auto rounded-md border">
-              <table className="w-full text-xs">
-                <thead className="bg-muted/40 text-[10px] uppercase tracking-wider text-muted-foreground">
-                  <tr>
-                    <th className="px-3 py-1.5 text-left font-medium">Division</th>
-                    <th className="px-3 py-1.5 text-right font-medium">Total</th>
-                    <th className="px-3 py-1.5 text-right font-medium">Verified</th>
-                    <th className="px-3 py-1.5 text-right font-medium">ICU avail</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {divisionRows
-                    .filter((r) => r.total > 0)
-                    .sort((a, b) => b.total - a.total)
-                    .map((r) => (
-                      <tr
-                        key={r.division}
-                        className="border-t bg-card transition-colors hover:bg-muted/30"
-                      >
-                        <td className="px-3 py-1.5 font-medium text-foreground">
-                          {r.division}
-                        </td>
-                        <td className="px-3 py-1.5 text-right tabular-nums">
-                          {r.total}
-                        </td>
-                        <td className="px-3 py-1.5 text-right tabular-nums text-niramoy-teal">
-                          {r.verified}
-                        </td>
-                        <td className="px-3 py-1.5 text-right tabular-nums">
-                          {r.icuAvail}
-                          <span className="text-muted-foreground">
-                            {" "}
-                            / {r.icuTotal}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                </tbody>
-              </table>
-            </div>
+            <AgTable<DivisionRow>
+              rowData={divisionRows
+                .filter((r) => r.total > 0)
+                .sort((a, b) => b.total - a.total)}
+              columnDefs={divisionColumnDefs}
+              pagination={false}
+              height="auto"
+              noRowsText="No divisions yet"
+            />
           </CardContent>
         </Card>
       </div>
@@ -404,6 +375,72 @@ function seedSpark(seed: number): number[] {
   }
   return out;
 }
+
+// ── Division snapshot column defs ─────────────────────────────────────
+
+interface DivisionRow {
+  division: string;
+  total: number;
+  verified: number;
+  icuAvail: number;
+  icuTotal: number;
+}
+
+const divisionColumnDefs: ColDef<DivisionRow>[] = [
+  {
+    headerName: "Division",
+    field: "division",
+    flex: 1.4,
+    minWidth: 120,
+    cellRenderer: (params: { data?: DivisionRow }) => {
+      if (!params.data) return null;
+      return (
+        <span className="font-medium text-foreground">
+          {params.data.division}
+        </span>
+      );
+    },
+  },
+  {
+    headerName: "Total",
+    field: "total",
+    flex: 0.6,
+    minWidth: 70,
+    cellClass: "text-right tabular-nums",
+  },
+  {
+    headerName: "Verified",
+    field: "verified",
+    flex: 0.7,
+    minWidth: 80,
+    cellRenderer: (params: { data?: DivisionRow }) => {
+      if (!params.data) return null;
+      return (
+        <span className="text-right tabular-nums text-niramoy-teal">
+          {params.data.verified}
+        </span>
+      );
+    },
+    cellClass: "text-right",
+  },
+  {
+    headerName: "ICU avail",
+    flex: 0.8,
+    minWidth: 100,
+    sortable: false,
+    filter: false,
+    cellRenderer: (params: { data?: DivisionRow }) => {
+      if (!params.data) return null;
+      return (
+        <span className="text-right tabular-nums">
+          {params.data.icuAvail}
+          <span className="text-muted-foreground"> / {params.data.icuTotal}</span>
+        </span>
+      );
+    },
+    cellClass: "text-right",
+  },
+];
 
 // Silence the unused-import lint when BedType types aren't referenced here.
 void ALL_BED_TYPES;

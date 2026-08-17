@@ -1,137 +1,274 @@
-"use client";
+"use client"
 
-import { useMemo, useState } from "react";
-import Link from "next/link";
+/**
+ * PAGE 4 — Update moderation queue (system admin).
+ *
+ * Lists every row in `update_history` for review. Tabs filter by status
+ * (Pending / Approved / Rejected / All); per-row actions Approve / Reject
+ * (with reason modal) or Reopen. A bulk-approve bar appears when one or
+ * more pending rows are selected.
+ *
+ * Rendered through `<AgTable>` with `bulkSelect` for the tri-state header
+ * checkbox, so multi-row approve works without writing our own checkbox
+ * column.
+ */
+
+import { useMemo, useState } from "react"
+import Link from "next/link"
 import {
-  IconArrowLeft,
-  IconChevronLeft,
-  IconChevronRight,
   IconCircleCheck,
   IconClipboardCheck,
   IconClipboardX,
   IconLoader2,
   IconRefresh,
-  IconShieldCog,
   IconX,
-} from "@tabler/icons-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+} from "@tabler/icons-react"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent } from "@/components/ui/card"
+import {
+  Field,
+  FieldContent,
+  FieldLabel,
+  FieldDescription,
+} from "@/components/ui/field"
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "@/components/ui/select"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import { AgTable } from "@/components/ag-grid/ag-table"
+import type { AgCellRenderer } from "@/components/ag-grid/type"
+import type { ColDef } from "ag-grid-community"
+import {
+  StatusBadgeWithReasonCell,
+  TypeBadgeCell,
+  UpdateActionsCell,
+} from "@/components/ag-grid/ag-table-cells"
 import {
   useAdminUpdates,
   useApproveUpdate,
   useRejectUpdate,
-} from "@/lib/hooks/use-admin";
-import type { UpdateHistoryRow } from "@/lib/api/admin";
+} from "@/lib/hooks/use-admin"
+import { useToasts } from "@/components/ui/toast"
+import type { UpdateHistoryRow } from "@/lib/api/admin"
 
-const PAGE_SIZE = 25;
-type StatusFilter = "all" | "Pending" | "Live" | "Rejected";
+const PAGE_SIZE = 25
+type StatusFilter = "all" | "Pending" | "Live" | "Rejected"
 
 const STATUS_TABS: { id: StatusFilter; label: string }[] = [
   { id: "all", label: "All" },
   { id: "Pending", label: "Pending" },
   { id: "Live", label: "Approved" },
   { id: "Rejected", label: "Rejected" },
-];
-
-const TYPE_LABELS: Record<string, string> = {
-  BedCount: "Bed Count",
-  Pricing: "Pricing",
-  Profile: "Profile",
-};
-
-const TYPE_BADGE: Record<string, string> = {
-  BedCount: "bg-niramoy-teal/10 text-niramoy-teal",
-  Pricing: "bg-amber-500/10 text-amber-700 dark:text-amber-400",
-  Profile: "bg-blue-500/10 text-blue-700 dark:text-blue-400",
-};
-
-const STATUS_BADGE: Record<string, string> = {
-  Pending: "bg-amber-500/10 text-amber-700 dark:text-amber-400",
-  Live: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400",
-  Rejected: "bg-destructive/10 text-destructive",
-};
+]
 
 export default function ModerationQueuePage() {
-  const [tab, setTab] = useState<StatusFilter>("Pending");
-  const [updateType, setUpdateType] = useState<string>("all");
-  const [page, setPage] = useState(1);
-  const [rejectTarget, setRejectTarget] = useState<UpdateHistoryRow | null>(null);
-  const [rejectReason, setRejectReason] = useState("");
-  const [selected, setSelected] = useState<Set<number>>(new Set());
+  const { pushToast } = useToasts()
+  const [tab, setTab] = useState<StatusFilter>("Pending")
+  const [updateType, setUpdateType] = useState<string>("all")
+  const [page, setPage] = useState(1)
+  const [rejectTarget, setRejectTarget] = useState<UpdateHistoryRow | null>(
+    null
+  )
+  const [selected, setSelected] = useState<Set<number>>(new Set())
 
   const { data, isLoading, isFetching } = useAdminUpdates({
     page,
     page_size: PAGE_SIZE,
     status: tab === "all" ? undefined : tab,
     update_type: updateType === "all" ? undefined : updateType,
-  });
+  })
 
-  const approve = useApproveUpdate();
-  const reject = useRejectUpdate();
+  const approve = useApproveUpdate()
+  const reject = useRejectUpdate()
 
-  const updates = data?.data ?? [];
-  const totalPages = data?.total_pages ?? 1;
-  const totalCount = data?.total_count ?? 0;
+  const updates = data?.data ?? []
+  const totalCount = data?.total_count ?? 0
 
-  // Only Pending rows are eligible for bulk approve.
-  const pendingIds = useMemo(
-    () => updates.filter((u) => u.status === "Pending").map((u) => u.id),
-    [updates],
-  );
-  const allSelected = pendingIds.length > 0 && pendingIds.every((id) => selected.has(id));
-  const someSelected = pendingIds.some((id) => selected.has(id));
-
-  function toggleAll() {
-    if (allSelected) {
-      setSelected((prev) => {
-        const next = new Set(prev);
-        for (const id of pendingIds) next.delete(id);
-        return next;
-      });
-    } else {
-      setSelected((prev) => new Set([...prev, ...pendingIds]));
-    }
-  }
-
-  function toggleOne(id: number) {
-    setSelected((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-  }
-
-  function clearSelection() {
-    setSelected(new Set());
-  }
+  // Only Pending rows are eligible for bulk approve — the `isRowSelectable`
+  // predicate wires that into AgTable's bulkSelect so non-Pending rows
+  // never appear in the header checkbox calculation.
+  const isRowSelectable = (u: UpdateHistoryRow) => u.status === "Pending"
 
   function handleBulkApprove() {
-    const ids = Array.from(selected);
-    if (ids.length === 0) return;
-    ids.forEach((id) => approve.mutate({ id }));
-    clearSelection();
+    const ids = Array.from(selected)
+    if (ids.length === 0) return
+    ids.forEach((id) => approve.mutate({ id }))
+    setSelected(new Set())
+    pushToast({
+      title: `${ids.length} update${ids.length !== 1 ? "s" : ""} approved`,
+      variant: "success",
+    })
   }
 
-  function handleReject() {
-    if (!rejectTarget || !rejectReason.trim()) return;
-    reject.mutate(
-      { id: rejectTarget.id, reason: rejectReason.trim() },
-      {
-        onSuccess: () => {
-          setRejectTarget(null);
-          setRejectReason("");
-        },
+  const columnDefs: ColDef<UpdateHistoryRow>[] = [
+    {
+      headerName: "Hospital",
+      field: "hospital_id",
+      flex: 0.7,
+      minWidth: 110,
+      cellRenderer: (params: { data?: UpdateHistoryRow }) => {
+        if (!params.data) return null
+        return (
+          <Link
+            href={`/hospital/${params.data.hospital_id}`}
+            className="font-medium text-foreground hover:underline"
+          >
+            #{params.data.hospital_id}
+          </Link>
+        )
       },
-    );
-  }
+    },
+    {
+      headerName: "Type",
+      field: "update_type",
+      flex: 1,
+      minWidth: 110,
+      cellRenderer: "typeBadge",
+    },
+    {
+      headerName: "Field",
+      field: "field_name",
+      flex: 1,
+      minWidth: 130,
+      cellRenderer: (params: { data?: UpdateHistoryRow }) => {
+        if (!params.data) return null
+        return params.data.field_name ? (
+          <span className="text-muted-foreground">
+            {params.data.field_name}
+          </span>
+        ) : (
+          <span className="text-muted-foreground">—</span>
+        )
+      },
+    },
+    {
+      headerName: "Previous → New",
+      flex: 1.5,
+      minWidth: 220,
+      sortable: false,
+      filter: false,
+      cellRenderer: (params: { data?: UpdateHistoryRow }) => {
+        if (!params.data) return null
+        const { previous_value, new_value } = params.data
+        return (
+          <div className="text-muted-foreground">
+            {previous_value !== null && (
+              <span className="line-through decoration-destructive/60">
+                {previous_value}
+              </span>
+            )}
+            {previous_value !== null && new_value !== null && (
+              <span className="mx-1">→</span>
+            )}
+            {new_value !== null && (
+              <span className="font-medium text-foreground">{new_value}</span>
+            )}
+            {previous_value === null && new_value === null && <span>—</span>}
+          </div>
+        )
+      },
+    },
+    {
+      headerName: "Submitted by",
+      field: "updated_by_user_id",
+      flex: 0.9,
+      minWidth: 110,
+      cellRenderer: (params: { data?: UpdateHistoryRow }) => {
+        if (!params.data) return null
+        return params.data.updated_by_user_id ? (
+          <span className="text-muted-foreground">
+            User #{params.data.updated_by_user_id}
+          </span>
+        ) : (
+          <span className="text-muted-foreground">—</span>
+        )
+      },
+    },
+    {
+      headerName: "Submitted at",
+      field: "created_at",
+      flex: 1.1,
+      minWidth: 140,
+      cellRenderer: (params: { data?: UpdateHistoryRow }) => {
+        if (!params.data) return null
+        return (
+          <span className="text-muted-foreground tabular-nums">
+            {new Date(params.data.created_at).toLocaleDateString("en-US", {
+              month: "short",
+              day: "numeric",
+              hour: "2-digit",
+              minute: "2-digit",
+            })}
+          </span>
+        )
+      },
+    },
+    {
+      headerName: "Status",
+      field: "status",
+      flex: 1.2,
+      minWidth: 150,
+      cellRenderer: "statusBadgeWithReason",
+    },
+    {
+      headerName: "Actions",
+      colId: "__actions",
+      flex: 1,
+      minWidth: 200,
+      pinned: "right",
+      sortable: false,
+      filter: false,
+      cellRenderer: "updateActions",
+      cellRendererParams: {
+        onApprove: (u: UpdateHistoryRow) => approve.mutate({ id: u.id }),
+        onReject: (u: UpdateHistoryRow) => setRejectTarget(u),
+        pending: { approve: approve.isPending },
+      },
+    },
+  ]
+
+  const bulkSelect = useMemo(
+    () => ({
+      enabled: updates.some(isRowSelectable),
+      isRowSelectable,
+      getRowId: (u: UpdateHistoryRow) => u.id,
+      selectedIds: selected,
+      onToggle: (id: unknown) => {
+        setSelected((prev) => {
+          const next = new Set(prev)
+          if (next.has(id as number)) next.delete(id as number)
+          else next.add(id as number)
+          return next
+        })
+      },
+      onToggleAll: () => {
+        const pendingIds = updates.filter(isRowSelectable).map((u) => u.id)
+        const allChecked =
+          pendingIds.length > 0 && pendingIds.every((id) => selected.has(id))
+        setSelected((prev) => {
+          const next = new Set(prev)
+          if (allChecked) {
+            for (const id of pendingIds) next.delete(id)
+          } else {
+            for (const id of pendingIds) next.add(id)
+          }
+          return next
+        })
+      },
+    }),
+    [updates, selected]
+  )
 
   return (
     <>
@@ -149,15 +286,18 @@ export default function ModerationQueuePage() {
         </div>
 
         {/* Filter bar */}
-        <Card>
-          <CardContent className="flex flex-wrap items-center gap-3 p-4">
+        <div>
+          <CardContent className="flex flex-wrap items-center gap-3">
             {/* Status tabs */}
             <div className="inline-flex rounded-md border bg-muted/30 p-0.5 text-xs">
               {STATUS_TABS.map((t) => (
                 <button
                   key={t.id}
                   type="button"
-                  onClick={() => { setTab(t.id); setPage(1); }}
+                  onClick={() => {
+                    setTab(t.id)
+                    setPage(1)
+                  }}
                   aria-pressed={tab === t.id}
                   className={`rounded-sm px-3 py-1 font-medium transition-colors ${
                     tab === t.id
@@ -172,7 +312,10 @@ export default function ModerationQueuePage() {
 
             <Select
               value={updateType}
-              onValueChange={(v) => { setUpdateType(v); setPage(1); }}
+              onValueChange={(v) => {
+                setUpdateType(v)
+                setPage(1)
+              }}
             >
               <SelectTrigger className="h-8 w-36">
                 <SelectValue placeholder="All types" />
@@ -191,10 +334,10 @@ export default function ModerationQueuePage() {
                 : `${totalCount} update${totalCount !== 1 ? "s" : ""}`}
             </p>
           </CardContent>
-        </Card>
+        </div>
 
         {/* Bulk approve bar */}
-        {someSelected && (
+        {selected.size > 0 && (
           <div className="flex items-center justify-between gap-2 rounded-md border border-niramoy-teal/30 bg-niramoy-teal/5 px-3 py-2 text-xs">
             <span className="text-muted-foreground">
               <span className="font-semibold text-foreground">
@@ -208,7 +351,7 @@ export default function ModerationQueuePage() {
                 size="sm"
                 variant="ghost"
                 className="h-7"
-                onClick={clearSelection}
+                onClick={() => setSelected(new Set())}
               >
                 Clear
               </Button>
@@ -231,279 +374,126 @@ export default function ModerationQueuePage() {
         )}
 
         {/* Table */}
-        <Card>
-          <CardContent className="p-0">
-            {isLoading ? (
-              <div className="flex items-center justify-center gap-2 py-16 text-xs text-muted-foreground">
-                <IconLoader2 className="size-4 animate-spin" />
-                Loading…
-              </div>
-            ) : updates.length === 0 ? (
-              <div className="flex flex-col items-center gap-1 py-16 text-center text-xs text-muted-foreground">
-                <IconClipboardCheck className="size-6 opacity-40" />
-                <p className="font-medium">Queue is empty</p>
-                <p>No {tab === "all" ? "" : tab.toLowerCase()} updates to review.</p>
-              </div>
-            ) : (
-              <>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-xs">
-                    <thead className="bg-muted/40 text-[10px] uppercase tracking-wider text-muted-foreground">
-                      <tr>
-                        {pendingIds.length > 0 && (
-                          <th className="w-8 px-3 py-2 text-left font-medium">
-                            <input
-                              type="checkbox"
-                              aria-label="Select all pending"
-                              checked={allSelected}
-                              onChange={toggleAll}
-                              className="size-3.5 cursor-pointer accent-niramoy-teal"
-                            />
-                          </th>
-                        )}
-                        <th className="px-3 py-2 text-left font-medium">Hospital</th>
-                        <th className="px-3 py-2 text-left font-medium">Type</th>
-                        <th className="px-3 py-2 text-left font-medium">Field</th>
-                        <th className="px-3 py-2 text-left font-medium">Previous → New</th>
-                        <th className="px-3 py-2 text-left font-medium">Submitted by</th>
-                        <th className="px-3 py-2 text-left font-medium">Submitted at</th>
-                        <th className="px-3 py-2 text-left font-medium">Status</th>
-                        <th className="px-3 py-2 text-right font-medium">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {updates.map((u) => (
-                        <tr
-                          key={u.id}
-                          className={`border-t bg-card transition-colors hover:bg-muted/30 ${
-                            selected.has(u.id) ? "bg-niramoy-teal/5" : ""
-                          }`}
-                        >
-                          {pendingIds.length > 0 && (
-                            <td className="w-8 px-3 py-2">
-                              {u.status === "Pending" && (
-                                <input
-                                  type="checkbox"
-                                  aria-label={`Select update #${u.id}`}
-                                  checked={selected.has(u.id)}
-                                  onChange={() => toggleOne(u.id)}
-                                  className="size-3.5 cursor-pointer accent-niramoy-teal"
-                                />
-                              )}
-                            </td>
-                          )}
-                          <td className="px-3 py-2 font-medium text-foreground">
-                            <Link
-                              href={`/hospital/${u.hospital_id}`}
-                              className="hover:underline"
-                            >
-                              #{u.hospital_id}
-                            </Link>
-                          </td>
-                          <td className="px-3 py-2">
-                            <span
-                              className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold ${
-                                TYPE_BADGE[u.update_type] ?? "bg-muted text-muted-foreground"
-                              }`}
-                            >
-                              {TYPE_LABELS[u.update_type] ?? u.update_type}
-                            </span>
-                          </td>
-                          <td className="px-3 py-2 text-muted-foreground">
-                            {u.field_name ?? "—"}
-                          </td>
-                          <td className="px-3 py-2 tabular-nums">
-                            {u.previous_value !== null && (
-                              <span className="text-muted-foreground line-through">
-                                {u.previous_value}
-                              </span>
-                            )}
-                            {u.previous_value !== null && u.new_value !== null && (
-                              <span className="mx-1 text-muted-foreground">→</span>
-                            )}
-                            {u.new_value !== null && (
-                              <span className="font-semibold text-foreground">
-                                {u.new_value}
-                              </span>
-                            )}
-                          </td>
-                          <td className="px-3 py-2 text-muted-foreground">
-                            {u.updated_by_user_id
-                              ? `User #${u.updated_by_user_id}`
-                              : "—"}
-                          </td>
-                          <td className="px-3 py-2 text-muted-foreground">
-                            {new Date(u.created_at).toLocaleDateString("en-US", {
-                              month: "short",
-                              day: "numeric",
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })}
-                          </td>
-                          <td className="px-3 py-2">
-                            <span
-                              className={`inline-flex rounded-full px-2 py-0.5 text-[10px] font-semibold ${
-                                STATUS_BADGE[u.status] ?? "bg-muted text-muted-foreground"
-                              }`}
-                            >
-                              {u.status}
-                            </span>
-                            {u.rejection_reason && (
-                              <p
-                                className="mt-0.5 max-w-[160px] truncate text-[10px] text-muted-foreground"
-                                title={u.rejection_reason}
-                              >
-                                {u.rejection_reason}
-                              </p>
-                            )}
-                          </td>
-                          <td className="px-3 py-2">
-                            <div className="flex items-center justify-end gap-1">
-                              {u.status === "Pending" && (
-                                <>
-                                  <Button
-                                    type="button"
-                                    size="sm"
-                                    className="h-6 gap-1 bg-emerald-500 text-white hover:bg-emerald-600"
-                                    disabled={approve.isPending}
-                                    onClick={() => approve.mutate({ id: u.id })}
-                                  >
-                                    <IconCircleCheck className="size-3" />
-                                    Approve
-                                  </Button>
-                                  <Button
-                                    type="button"
-                                    size="sm"
-                                    variant="outline"
-                                    className="h-6 gap-1 text-destructive"
-                                    onClick={() => {
-                                      setRejectTarget(u);
-                                      setRejectReason("");
-                                    }}
-                                  >
-                                    <IconClipboardX className="size-3" />
-                                    Reject
-                                  </Button>
-                                </>
-                              )}
-                              {u.status !== "Pending" && (
-                                <Button
-                                  type="button"
-                                  size="sm"
-                                  variant="ghost"
-                                  className="h-6 gap-1 text-muted-foreground"
-                                  disabled={approve.isPending}
-                                  onClick={() => approve.mutate({ id: u.id })}
-                                  title="Re-open as pending"
-                                >
-                                  <IconRefresh className="size-3" />
-                                  Reopen
-                                </Button>
-                              )}
-                            </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-
-                {/* Pagination */}
-                <div className="flex items-center justify-between gap-2 border-t px-3 py-2 text-[11px] text-muted-foreground">
-                  <span>
-                    Page <span className="font-medium text-foreground">{page}</span> of{" "}
-                    <span className="font-medium text-foreground">{totalPages}</span>
-                    {" · "}
-                    <span className="font-medium text-foreground">{totalCount}</span> total
-                  </span>
-                  <div className="flex items-center gap-1">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="h-7 w-7 p-0"
-                      disabled={page <= 1}
-                      onClick={() => setPage((p) => p - 1)}
-                    >
-                      <IconChevronLeft className="size-3.5" />
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="h-7 w-7 p-0"
-                      disabled={page >= totalPages}
-                      onClick={() => setPage((p) => p + 1)}
-                    >
-                      <IconChevronRight className="size-3.5" />
-                    </Button>
-                  </div>
-                </div>
-              </>
-            )}
-          </CardContent>
-        </Card>
+        <AgTable<UpdateHistoryRow>
+          rowData={updates}
+          columnDefs={columnDefs}
+          components={{
+            typeBadge:
+              TypeBadgeCell as unknown as AgCellRenderer<UpdateHistoryRow>,
+            statusBadgeWithReason:
+              StatusBadgeWithReasonCell as unknown as AgCellRenderer<UpdateHistoryRow>,
+            updateActions:
+              UpdateActionsCell as unknown as AgCellRenderer<UpdateHistoryRow>,
+          }}
+          mode="server"
+          pageSize={PAGE_SIZE}
+          totalRows={totalCount}
+          onPageChange={setPage}
+          bulkSelect={bulkSelect}
+          disableExportDialogOnCellClick
+          loading={isLoading}
+          noRowsText={
+            updates.length === 0
+              ? `Queue is empty${tab === "all" ? "" : ` (${tab.toLowerCase()})`}`
+              : "No updates"
+          }
+        />
       </div>
 
       {/* Reject dialog */}
-      {rejectTarget && (
-        <div
-          className="fixed inset-0 z-50 flex items-end justify-center bg-foreground/40 backdrop-blur-sm sm:items-center"
-          role="dialog"
-          aria-modal="true"
-          onClick={() => setRejectTarget(null)}
-        >
-          <div
-            className="w-full max-w-md space-y-3 rounded-t-lg border bg-card p-5 shadow-xl sm:rounded-lg"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-start justify-between gap-2">
-              <div>
-                <h3 className="flex items-center gap-2 font-heading text-sm font-semibold">
-                  <IconClipboardX className="size-4 text-destructive" />
-                  Reject this update
-                </h3>
-                <p className="mt-0.5 text-[11px] text-muted-foreground">
-                  Hospital #{rejectTarget.hospital_id} · {rejectTarget.field_name ?? rejectTarget.update_type}
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setRejectTarget(null)}
-                className="rounded-md p-1 text-muted-foreground hover:bg-muted"
-              >
-                <IconX className="size-3.5" />
-              </button>
-            </div>
-            <div className="space-y-1">
-              <label className="block text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
-                Reason (shown to hospital admin) <span className="text-destructive">*</span>
-              </label>
-              <textarea
-                rows={3}
-                className="border-input bg-input/20 focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30 w-full rounded-md border px-3 py-2 text-xs outline-none"
-                placeholder="e.g. Count exceeds total capacity — please re-check."
-                value={rejectReason}
-                onChange={(e) => setRejectReason(e.target.value)}
-                disabled={reject.isPending}
-              />
-            </div>
-            <div className="flex justify-end gap-2">
-              <Button type="button" variant="ghost" size="sm" onClick={() => setRejectTarget(null)}>
-                Cancel
-              </Button>
-              <Button
-                type="button"
-                size="sm"
-                disabled={!rejectReason.trim() || reject.isPending}
-                onClick={handleReject}
-                className="h-8 bg-destructive text-white hover:bg-destructive/90"
-              >
-                {reject.isPending && <IconLoader2 className="size-3.5 animate-spin" />}
-                Reject update
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+      <RejectUpdateDialog
+        target={rejectTarget}
+        onClose={() => setRejectTarget(null)}
+        onConfirm={(reason) => {
+          if (!rejectTarget) return
+          reject.mutate(
+            { id: rejectTarget.id, reason },
+            { onSuccess: () => setRejectTarget(null) }
+          )
+        }}
+        loading={reject.isPending}
+      />
     </>
-  );
+  )
+}
+
+// ── Reject dialog body ────────────────────────────────────────────────
+
+function RejectUpdateDialog({
+  target,
+  onClose,
+  onConfirm,
+  loading,
+}: {
+  target: UpdateHistoryRow | null
+  onClose: () => void
+  onConfirm: (reason: string) => void
+  loading?: boolean
+}) {
+  const [reason, setReason] = useState("")
+
+  return (
+    <Dialog open={Boolean(target)} onOpenChange={(o) => !o && onClose()}>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <IconClipboardX className="size-4 text-destructive" />
+            Reject this update
+          </DialogTitle>
+          <DialogDescription>
+            {target &&
+              `Hospital #${target.hospital_id} · ${
+                target.field_name ?? target.update_type
+              }`}
+          </DialogDescription>
+        </DialogHeader>
+
+        <Field>
+          <FieldLabel required>Reason (shown to hospital admin)</FieldLabel>
+          <FieldContent>
+            <textarea
+              rows={3}
+              className="w-full rounded-md border border-input bg-input/20 px-3 py-2 text-xs outline-none focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/30"
+              placeholder="e.g. Count exceeds total capacity — please re-check."
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              disabled={loading}
+            />
+            <FieldDescription>
+              The hospital admin sees this in their update history.
+            </FieldDescription>
+          </FieldContent>
+        </Field>
+
+        <DialogFooter>
+          <Button type="button" variant="ghost" size="sm" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            disabled={!reason.trim() || loading}
+            onClick={() => {
+              onConfirm(reason.trim())
+              setReason("")
+            }}
+            className="h-8 bg-destructive text-white hover:bg-destructive/90"
+          >
+            {loading && <IconLoader2 className="size-3.5 animate-spin" />}
+            Reject update
+          </Button>
+        </DialogFooter>
+
+        {/* Hidden close trigger so the SheetHeader's auto-close button works. */}
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Close"
+          className="hidden"
+        >
+          <IconX />
+        </button>
+      </DialogContent>
+    </Dialog>
+  )
 }
