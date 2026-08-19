@@ -32,16 +32,15 @@ import { HospitalInfoSection } from "@/components/hospital-detail/hospital-info-
 import { AvailabilityHistoryChart } from "@/components/hospital-detail/availability-history-chart";
 import { ReviewsSection } from "@/components/hospital-detail/reviews-section";
 import { RelatedHospitals } from "@/components/hospital-detail/related-hospitals";
-import { useHospitalStore } from "@/lib/use-hospital-store";
+import { useHospitalDetail } from "@/lib/hooks/use-hospital-detail";
 import type { Hospital } from "@/lib/types/hospital";
 
 const COMPARE_KEY = "niramoy:compareIds";
 
 export default function HospitalDetailPage() {
   const params = useParams<{ id: string }>();
-  const id = params?.id;
-  const { hospitals } = useHospitalStore();
-  const hospital: Hospital | undefined = hospitals.find((h) => h.id === id);
+  const slug = params?.id;
+  const { hospital, isLoading, isError } = useHospitalDetail(slug);
 
   const [compareIds, setCompareIds] = useState<string[]>([]);
 
@@ -66,7 +65,19 @@ export default function HospitalDetailPage() {
     }
   }, [compareIds]);
 
-  if (!hospital) {
+  if (isLoading) {
+    return (
+      <>
+        <SiteNavbar />
+        <main className="mx-auto w-full max-w-3xl px-4 py-16 text-center sm:px-6">
+          <p className="text-sm text-muted-foreground">Loading hospital…</p>
+        </main>
+        <SiteFooter />
+      </>
+    );
+  }
+
+  if (isError || !hospital) {
     return (
       <>
         <SiteNavbar />
@@ -77,7 +88,7 @@ export default function HospitalDetailPage() {
           <p className="mt-2 text-sm text-muted-foreground">
             We couldn’t find a hospital with the id{" "}
             <code className="rounded bg-muted px-1.5 py-0.5 text-xs">
-              {id}
+              {slug}
             </code>
             . It may have been removed or the link is incorrect.
           </p>

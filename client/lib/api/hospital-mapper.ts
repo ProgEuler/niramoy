@@ -52,6 +52,21 @@ function toSlug(summary: Pick<HospitalSummary, "id" | "name">): string {
 }
 
 /**
+ * Extract the numeric backend id from a slug produced by `toSlug`.
+ *
+ * The detail-page URL is `/hospital/${slug}` where the slug embeds the
+ * numeric id as a trailing suffix (e.g. `eos-qui-et-et-molli-5`). Legacy
+ * seed data uses purely textual slugs (`dmch-dhaka`) — in that case there
+ * is no numeric id to extract and this returns `null`.
+ */
+export function parseSlugId(slug: string): number | null {
+  const match = /-(\d+)$/.exec(slug);
+  if (!match) return null;
+  const id = Number(match[1]);
+  return Number.isFinite(id) && id > 0 ? id : null;
+}
+
+/**
  * Pick a division. Backend may return null when district-to-division isn't
  * mapped yet — fallback to "Dhaka" so the UI's typed `BangladeshDivision`
  * union still accepts it. (Better: surface "Unknown" to the user once the
