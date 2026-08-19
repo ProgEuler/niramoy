@@ -48,6 +48,10 @@ export interface HospitalSummary {
   /** Server-computed availability color hex, e.g. "#22c55e". */
   availability_color: string | null;
   distance_km: number | null;
+  /** Curated flag surfaced on the landing page. */
+  is_featured: boolean;
+  /** Optional short description — used by the landing-page featured card. */
+  description: string | null;
 }
 
 /**
@@ -175,6 +179,23 @@ export interface HospitalStatsResponse {
 
 export function getHospitalStats(options: { signal?: AbortSignal } = {}) {
   return api.get<HospitalStatsResponse>("/api/public/stats", {
+    signal: options.signal,
+  });
+}
+
+/**
+ * GET /api/public/hospitals/featured?limit=N
+ *
+ * Returns the curated landing-page featured list. The backend applies
+ * verified+active+is_featured filters and sorts by `updated_at desc`.
+ * `limit` is 1–50, default 12.
+ */
+export function getFeaturedHospitals(
+  limit: number = 12,
+  options: { signal?: AbortSignal } = {},
+) {
+  return api.get<HospitalSummary[]>("/api/public/hospitals/featured", {
+    query: { limit },
     signal: options.signal,
   });
 }

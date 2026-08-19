@@ -1,52 +1,34 @@
-"use client";
+"use client"
 
-import Link from "next/link";
-import { useMemo } from "react";
+import Link from "next/link"
 import {
   IconArrowRight,
   IconShieldCheck,
   IconStar,
   IconStarFilled,
-} from "@tabler/icons-react";
-import { Card, CardContent } from "@/components/ui/card";
-import { BedChip } from "@/components/find-care/bed-chip";
-import { useHospitalStore } from "@/lib/use-hospital-store";
-import { ALL_BED_TYPES } from "@/lib/types/hospital";
-import type { Hospital } from "@/lib/types/hospital";
+} from "@tabler/icons-react"
+import { Card, CardContent } from "@/components/ui/card"
+import { BedChip } from "@/components/find-care/bed-chip"
+import { useFeaturedHospitals } from "@/lib/hooks/use-featured-hospitals"
+import { ALL_BED_TYPES } from "@/lib/types/hospital"
+import type { Hospital } from "@/lib/types/hospital"
+import { FeaturedCardSkeletonGrid } from "./featured-card-skeleton"
+import { BadgeCheck } from "lucide-react"
 
-/**
- * Six to eight curated featured cards. Sort: rating desc, then available ICU
- * desc, then alphabetical. Tied to the same store as the rest of the app so
- * the cards reflect whatever the JSON currently holds.
- */
-const MAX_CARDS = 8;
+const MAX_CARDS = 8
 
 export function FeaturedHospitals() {
-  const { hospitals } = useHospitalStore();
+  const { hospitals, isLoading, isError, error, refetch } =
+    useFeaturedHospitals(MAX_CARDS)
 
-  const featured = useMemo<Hospital[]>(() => {
-    return hospitals
-      .filter((h) => h.verified)
-      .slice()
-      .sort((a, b) => {
-        const r = (b.rating ?? 0) - (a.rating ?? 0);
-        if (r !== 0) return r;
-        const icuDiff = b.beds.icu.available - a.beds.icu.available;
-        if (icuDiff !== 0) return icuDiff;
-        return a.name.localeCompare(b.name);
-      })
-      .slice(0, MAX_CARDS);
-  }, [hospitals]);
+  const featured = hospitals.slice(0, MAX_CARDS)
 
   return (
-    <section
-      aria-labelledby="featured-heading"
-      className="bg-background"
-    >
+    <section aria-labelledby="featured-heading" className="bg-background">
       <div className="mx-auto w-full max-w-7xl px-4 py-12 sm:px-6 sm:py-16">
         <div className="mb-6 flex flex-wrap items-end justify-between gap-3">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-niramoy-teal">
+            <p className="text-xs font-semibold tracking-wider text-niramoy-teal uppercase">
               Top rated
             </p>
             <h2
@@ -69,7 +51,23 @@ export function FeaturedHospitals() {
           </Link>
         </div>
 
-        {featured.length === 0 ? (
+        {isLoading ? (
+          <FeaturedCardSkeletonGrid count={MAX_CARDS} />
+        ) : isError ? (
+          <div className="rounded-lg border border-destructive/30 bg-destructive/5 p-4 text-sm text-destructive">
+            <p>
+              Couldn&apos;t load featured hospitals
+              {error?.message ? `: ${error.message}` : "."}
+            </p>
+            <button
+              type="button"
+              onClick={() => refetch()}
+              className="mt-2 inline-flex items-center gap-1 text-xs font-medium text-destructive underline-offset-2 hover:underline"
+            >
+              Try again
+            </button>
+          </div>
+        ) : featured.length === 0 ? (
           <p className="text-sm text-muted-foreground">
             No hospitals available right now.
           </p>
@@ -84,34 +82,32 @@ export function FeaturedHospitals() {
         )}
       </div>
     </section>
-  );
+  )
 }
 
 function FeaturedCard({ hospital }: { hospital: Hospital }) {
-  const rating = hospital.rating ?? 0;
+  const rating = hospital.rating ?? 0
+  const verified = hospital.verified
   return (
     <Link
       href={`/hospital/${hospital.id}`}
       className="group block h-full focus-visible:outline-none"
     >
-      <Card className="h-full transition-all duration-150 group-hover:-translate-y-0.5 group-hover:shadow-md">
+      <Card className="h-full group-hover:shadow-md">
         <CardContent className="flex h-full flex-col gap-2 p-3">
           {/* Header */}
           <div className="flex items-start justify-between gap-2">
             <div className="min-w-0 flex-1">
-              <h3 className="truncate font-semibold text-foreground group-hover:text-niramoy-teal">
-                {hospital.name}
-              </h3>
+              <div className="flex items-center gap-1">
+                <h3 className="truncate font-semibold text-foreground group-hover:text-niramoy-teal">
+                  {hospital.name}
+                </h3>
+                {verified && <BadgeCheck size={16} fill="#0E9E8E" />}
+              </div>
               <p className="text-[11px] text-muted-foreground">
                 {hospital.district}, {hospital.division}
               </p>
             </div>
-            {hospital.verified && (
-              <span className="inline-flex shrink-0 items-center gap-0.5 rounded-full bg-niramoy-teal px-1.5 py-0.5 text-[10px] font-semibold text-white">
-                <IconShieldCheck className="size-2.5" />
-                Verified
-              </span>
-            )}
           </div>
 
           {/* Bed availability row */}
@@ -132,15 +128,18 @@ function FeaturedCard({ hospital }: { hospital: Hospital }) {
         </CardContent>
       </Card>
     </Link>
-  );
+  )
 }
 
 function RatingStars({ value }: { value: number }) {
   // Render 5 stars; the proportion of filled stars matches the rating.
   return (
-    <span className="inline-flex items-center gap-0.5" aria-label={`Rated ${value} out of 5`}>
+    <span
+      className="inline-flex items-center gap-0.5"
+      aria-label={`Rated ${value} out of 5`}
+    >
       {[0, 1, 2, 3, 4].map((i) => {
-        const filled = i < Math.round(value);
+        const filled = i < Math.round(value)
         return filled ? (
           <IconStarFilled
             key={i}
@@ -153,11 +152,11 @@ function RatingStars({ value }: { value: number }) {
             className="size-3 text-muted-foreground/40"
             aria-hidden
           />
-        );
+        )
       })}
-      <span className="ml-1 text-[11px] font-medium tabular-nums text-foreground">
+      <span className="ml-1 text-[11px] font-medium text-foreground tabular-nums">
         {value.toFixed(1)}
       </span>
     </span>
-  );
+  )
 }

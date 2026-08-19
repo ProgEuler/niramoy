@@ -1,4 +1,4 @@
-"use client";
+"use client"
 
 /**
  * Page-3 hospital info section: address, embedded map, phones, hours,
@@ -6,7 +6,7 @@
  * the MapLibre shell with a single marker.
  */
 
-import { useEffect, useState } from "react";
+import { useEffect, useState } from "react"
 import {
   IconBuildingHospital,
   IconCheck,
@@ -14,15 +14,15 @@ import {
   IconMapPin,
   IconPhone,
   IconX,
-} from "@tabler/icons-react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Map, MapMarker, MarkerContent, MapControls } from "@/components/ui/map";
-import { is24hEmergency } from "@/lib/hospital-derivations";
-import { ALL_BED_TYPES } from "@/lib/types/hospital";
-import type { Hospital } from "@/lib/types/hospital";
+} from "@tabler/icons-react"
+import { Card, CardContent } from "@/components/ui/card"
+import { Map, MapMarker, MarkerContent, MapControls } from "@/components/ui/map"
+import { is24hEmergency } from "@/lib/hospital-derivations"
+import { ALL_BED_TYPES } from "@/lib/types/hospital"
+import type { Hospital } from "@/lib/types/hospital"
 
 interface Props {
-  hospital: Hospital;
+  hospital: Hospital
 }
 
 const FULL: Record<string, string> = {
@@ -30,13 +30,13 @@ const FULL: Record<string, string> = {
   nicu: "NICU",
   ccu: "CCU",
   hdu: "HDU",
-};
+}
 
 export function HospitalInfoSection({ hospital }: Props) {
-  const is24h = is24hEmergency(hospital);
+  const is24h = is24hEmergency(hospital)
   // Mount flag prevents the MapLibre canvas from initializing during SSR.
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => setMounted(true), [])
 
   return (
     <section
@@ -63,7 +63,10 @@ export function HospitalInfoSection({ hospital }: Props) {
             <Row icon={<IconMapPin className="size-3.5" />} label="Address">
               <span>{hospital.address}</span>
             </Row>
-            <Row icon={<IconPhone className="size-3.5" />} label="Emergency hotline">
+            <Row
+              icon={<IconPhone className="size-3.5" />}
+              label="Emergency hotline"
+            >
               <a
                 href={`tel:${hospital.phone}`}
                 className="font-medium text-niramoy-teal hover:underline"
@@ -71,7 +74,10 @@ export function HospitalInfoSection({ hospital }: Props) {
                 {hospital.phone}
               </a>
             </Row>
-            <Row icon={<IconClock24 className="size-3.5" />} label="Operating hours">
+            <Row
+              icon={<IconClock24 className="size-3.5" />}
+              label="Operating hours"
+            >
               {is24h ? (
                 <span className="inline-flex items-center gap-1 font-medium text-[#22c55e]">
                   <span className="size-1.5 rounded-full bg-[#22c55e]" />
@@ -91,12 +97,12 @@ export function HospitalInfoSection({ hospital }: Props) {
 
           {/* Facility type checklist */}
           <div>
-            <div className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+            <div className="text-[10px] font-medium tracking-wider text-muted-foreground uppercase">
               Facility types
             </div>
             <ul className="mt-2 grid grid-cols-2 gap-1.5">
               {ALL_BED_TYPES.map((t) => {
-                const offered = hospital.beds[t].total > 0;
+                const offered = hospital.beds[t].total > 0
                 return (
                   <li
                     key={t}
@@ -116,7 +122,7 @@ export function HospitalInfoSection({ hospital }: Props) {
                       {offered ? "Available" : "Not offered"}
                     </span>
                   </li>
-                );
+                )
               })}
             </ul>
           </div>
@@ -131,11 +137,9 @@ export function HospitalInfoSection({ hospital }: Props) {
                 center={[hospital.lng, hospital.lat]}
                 zoom={14}
                 fadeDuration={0}
+                attributionControl={false}
               >
-                <MapMarker
-                  longitude={hospital.lng}
-                  latitude={hospital.lat}
-                >
+                <MapMarker longitude={hospital.lng} latitude={hospital.lat}>
                   <MarkerContent>
                     <div className="flex size-7 items-center justify-center rounded-full border-2 border-white bg-niramoy-teal text-white shadow-lg">
                       <IconMapPin className="size-3.5" />
@@ -158,7 +162,7 @@ export function HospitalInfoSection({ hospital }: Props) {
         </CardContent>
       </Card>
     </section>
-  );
+  )
 }
 
 function Row({
@@ -166,19 +170,19 @@ function Row({
   label,
   children,
 }: {
-  icon: React.ReactNode;
-  label: string;
-  children: React.ReactNode;
+  icon: React.ReactNode
+  label: string
+  children: React.ReactNode
 }) {
   return (
     <div className="flex items-start gap-2">
       <span className="mt-0.5 text-muted-foreground">{icon}</span>
       <div className="min-w-0 flex-1">
-        <div className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+        <div className="text-[10px] font-medium tracking-wider text-muted-foreground uppercase">
           {label}
         </div>
         <div className="text-foreground">{children}</div>
       </div>
     </div>
-  );
+  )
 }

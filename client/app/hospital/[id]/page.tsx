@@ -1,23 +1,4 @@
 "use client";
-
-/**
- * PAGE 3 — Hospital Detail (public, no login).
- *
- * Sections, top to bottom:
- *   1. HospitalHeader   — name, district, verification, action buttons
- *   2. BedAvailabilityPanel — 4 live cards with progress bars (SignalR-ready)
- *   3. HospitalInfoSection — address, embedded map, phones, hours, facility
- *                            checks, about paragraph
- *   4. AvailabilityHistoryChart — 7-day SVG line chart with bed-type tabs
- *   5. ReviewsSection   — overall rating, breakdown, individual reviews,
- *                          pagination, write-a-review (login-gated)
- *   6. RelatedHospitals — horizontal scroller of nearby alternatives
- *
- * Compare state is local (one hospital detail page at a time) — flipping the
- * "Add to Compare" bookmark persists in sessionStorage so a user can navigate
- * to /compare?ids=… without losing their selection across pages.
- */
-
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
@@ -132,8 +113,8 @@ export default function HospitalDetailPage() {
           <BedAvailabilityPanel hospital={hospital} />
           <HospitalInfoSection hospital={hospital} />
           <AvailabilityHistoryChart hospital={hospital} />
-          <ReviewsSection hospital={hospital} />
-          <RelatedHospitals hospital={hospital} />
+          {/* <ReviewsSection hospital={hospital} /> */}
+          {/* <RelatedHospitals hospital={hospital} /> */}
           <Disclaimer />
         </div>
       </main>

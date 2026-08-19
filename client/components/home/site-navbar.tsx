@@ -57,40 +57,6 @@ export function SiteNavbar() {
 
         {/* Right cluster */}
         <div className="flex items-center gap-2">
-          <div
-            role="group"
-            aria-label="Language toggle"
-            className="hidden items-center rounded-md border bg-input/20 p-0.5 text-[11px] font-medium sm:flex"
-          >
-            <button
-              type="button"
-              onClick={() => setLanguage("en")}
-              aria-pressed={language === "en"}
-              className={cn(
-                "rounded-sm px-2 py-1 transition-colors",
-                language === "en"
-                  ? "bg-niramoy-teal text-white"
-                  : "text-muted-foreground hover:text-foreground"
-              )}
-            >
-              EN
-            </button>
-            <button
-              type="button"
-              onClick={() => setLanguage("bn")}
-              aria-pressed={language === "bn"}
-              className={cn(
-                "rounded-sm px-2 py-1 transition-colors",
-                language === "bn"
-                  ? "bg-niramoy-teal text-white"
-                  : "text-muted-foreground hover:text-foreground"
-              )}
-            >
-              বাংলা
-            </button>
-            <IconLanguage className="mr-1 ml-0.5 size-3.5 text-muted-foreground" />
-          </div>
-
           <Button
             asChild
             size="sm"
