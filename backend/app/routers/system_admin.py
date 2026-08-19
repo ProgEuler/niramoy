@@ -36,6 +36,7 @@ from ..models.enums import FacilityType, UpdateType, UserRole as UserRoleEnum
 from ..schemas.common import PaginatedResponse
 from ..schemas.hospital import (
     AdminUserCreate,
+    FeatureIn,
     HospitalAdminOut,
     HospitalCreate,
     HospitalSummaryOut,
@@ -158,6 +159,7 @@ async def get_hospital(
         "longitude": h.longitude,
         "is_verified": h.is_verified,
         "is_active": h.is_active,
+        "is_featured": h.is_featured,
         "district": h.district,
         "created_at": h.created_at,
         "updated_at": h.updated_at,
@@ -263,6 +265,29 @@ async def verify_hospital(
         for a in admins:
             await send_verification_email(a.email, h.name)
     return {"id": h.id, "is_verified": h.is_verified}
+
+
+@router.patch("/hospitals/{hospital_id}/feature")
+async def feature_hospital(
+    hospital_id: int,
+    payload: FeatureIn,
+    db: AsyncSession = Depends(get_db),
+    _: User = Depends(require_system_admin),
+) -> dict:
+    """Toggle the ``is_featured`` flag for a hospital.
+
+    Featured hospitals are surfaced on the public landing page via
+    ``GET /api/public/hospitals/featured``. Note: the featured endpoint
+    also enforces ``is_verified = true`` and ``is_active = true`` --
+    flipping this flag on a suspended or unverified hospital will not
+    cause it to appear until those are also true.
+    """
+    h = (await db.execute(select(Hospital).where(Hospital.id == hospital_id))).scalar_one_or_none()
+    if h is None:
+        raise HTTPException(status_code=404, detail="Hospital not found")
+    h.is_featured = payload.is_featured
+    await db.commit()
+    return {"id": h.id, "is_featured": h.is_featured}
 
 
 @router.patch("/hospitals/{hospital_id}/suspend")

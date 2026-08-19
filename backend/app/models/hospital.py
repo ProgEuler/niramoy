@@ -42,6 +42,12 @@ class Hospital(Base):
     is_active: Mapped[bool] = mapped_column(
         Boolean, nullable=False, default=True, server_default="true", index=True
     )
+    # Curated flag for landing-page promotional blocks. System admins
+    # toggle this via the admin endpoint; the public landing API only
+    # returns rows where this is true AND the hospital is verified+active.
+    is_featured: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=False, server_default="false", index=True
+    )
 
     # OSM source data (kept for traceability of OSM imports).
     osm_id: Mapped[Optional[int]] = mapped_column(Integer, nullable=True, index=True)

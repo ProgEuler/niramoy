@@ -50,4 +50,6 @@ def hospital_to_summary(h: Hospital) -> HospitalSummaryOut:
         last_updated=last_updated,
         is_stale=_is_stale(last_updated, settings.stale_threshold_hours),
         availability_color=color,
+        is_featured=h.is_featured,
+        description=h.description,
     )

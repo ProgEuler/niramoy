@@ -89,6 +89,8 @@ class HospitalSummaryOut(BaseModel):
     is_stale: bool = False
     availability_color: Optional[str] = None
     distance_km: Optional[float] = None
+    is_featured: bool = False
+    description: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -247,6 +249,7 @@ class HospitalUpdate(BaseModel):
     longitude: Optional[float] = Field(default=None, ge=-180, le=180)
     is_verified: Optional[bool] = None
     is_active: Optional[bool] = None
+    is_featured: Optional[bool] = None
     district: Optional[str] = Field(default=None, min_length=2, max_length=100)
 
 
@@ -260,6 +263,10 @@ class VerifyIn(BaseModel):
 class SuspendIn(BaseModel):
     is_suspended: bool
     reason: str = Field(min_length=1, max_length=500)
+
+
+class FeatureIn(BaseModel):
+    is_featured: bool
 
 
 # ── User management ────────────────────────────────────────────────────

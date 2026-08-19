@@ -46,6 +46,38 @@ from ..services.serializers import hospital_to_summary
 router = APIRouter(prefix="/api/public", tags=["public"])
 
 
+# ── Featured hospitals (landing page) ─────────────────────────────────
+
+
+@router.get("/hospitals/featured", response_model=List[HospitalSummaryOut])
+async def featured_hospitals(
+    db: AsyncSession = Depends(get_db),
+    limit: int = Query(12, ge=1, le=50, description="Max featured hospitals to return"),
+) -> List[HospitalSummaryOut]:
+    """Return the curated featured hospitals for the landing page.
+
+    Filters to verified+active rows with ``is_featured = true``. Sorted
+    by ``updated_at`` desc so a recently-edited featured hospital surfaces
+    before a stale one; ties broken by id for stability.
+    """
+    result = await db.execute(
+        select(Hospital)
+        .where(
+            Hospital.is_featured.is_(True),
+            Hospital.is_verified.is_(True),
+            Hospital.is_active.is_(True),
+        )
+        .options(
+            selectinload(Hospital.bed_availability),
+            selectinload(Hospital.ratings),
+        )
+        .order_by(Hospital.updated_at.desc(), Hospital.id.asc())
+        .limit(limit)
+    )
+    rows = list(result.scalars().all())
+    return [hospital_to_summary(h) for h in rows]
+
+
 _STATS_CACHE_VALUE: Optional[dict] = None
 _STATS_CACHE_EXPIRES: float = 0.0
 _STATS_TTL_SEC = 60
