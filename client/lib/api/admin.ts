@@ -1,16 +1,5 @@
-/**
- * Typed wrappers around all /api/admin/* endpoints.
- *
- * Mirrors the FastAPI system_admin router exactly so types don't drift.
- * Every function accepts a `token` string (pulled from the auth store by
- * the calling hook).
- */
-
 import { api } from "./client";
 import type { UserRole } from "./auth";
-
-// ── Shared shapes ──────────────────────────────────────────────────────
-
 export interface PaginatedResponse<T> {
   data: T[];
   page: number;
@@ -18,9 +7,6 @@ export interface PaginatedResponse<T> {
   total_count: number;
   total_pages: number;
 }
-
-// ── Hospital shapes ────────────────────────────────────────────────────
-
 export interface AdminHospital {
   id: number;
   name: string;
@@ -103,8 +89,6 @@ export interface HospitalCreatePayload {
   is_verified?: boolean;
 }
 
-// ── User shapes ────────────────────────────────────────────────────────
-
 export interface AdminUser {
   id: number;
   username: string;
@@ -122,8 +106,6 @@ export interface CreateAdminUserPayload {
   password: string;
 }
 
-// ── Update history shapes ──────────────────────────────────────────────
-
 export interface UpdateHistoryRow {
   id: number;
   hospital_id: number;
@@ -137,8 +119,6 @@ export interface UpdateHistoryRow {
   rejection_reason: string | null;
   created_at: string;
 }
-
-// ── Hospitals API ──────────────────────────────────────────────────────
 
 export interface ListHospitalsParams {
   page?: number;

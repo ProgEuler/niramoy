@@ -4,8 +4,10 @@ import { useQuery } from "@tanstack/react-query";
 
 import {
   getMyHospitalDashboard,
+  getMyHospitalHistory,
   getMyHospitalProfile,
   type MyHospitalDashboard,
+  type MyHospitalHistoryRow,
   type MyHospitalProfile,
 } from "@/lib/api/hospital-admin";
 import { summaryToHospital } from "@/lib/api/hospital-mapper";
@@ -16,6 +18,8 @@ export const myHospitalKeys = {
   all: ["hospital", "me"] as const,
   profile: () => [...myHospitalKeys.all, "profile"] as const,
   dashboard: () => [...myHospitalKeys.all, "dashboard"] as const,
+  history: (params: { update_type?: string; page_size?: number } = {}) =>
+    [...myHospitalKeys.all, "history", params] as const,
 };
 
 export function useMyHospitalDashboard(
@@ -58,6 +62,42 @@ export function useMyHospitalProfile(
 
   return {
     profile: query.data ?? null,
+    isLoading: query.isLoading,
+    isError: query.isError,
+    error: query.error,
+    isFetching: query.isFetching,
+    refetch: query.refetch,
+  };
+}
+
+/**
+ * GET /api/hospital/history — the signed-in admin's own update history.
+ *
+ * Defaults to `update_type=Pricing` and `page_size=50` since this hook
+ * is currently only consumed by the pricing form's "Recent price
+ * changes" panel. Stale time is short (30s) so a save shows up
+ * promptly after the pricing mutation invalidates the key.
+ */
+export function useMyHospitalHistory(
+  params: { update_type?: string; page_size?: number } = {},
+  options: { enabled?: boolean } = {},
+) {
+  const { enabled = true } = options;
+  const accessToken = useAuthStore(selectAccessToken);
+  const merged = { update_type: "Pricing", page_size: 50, ...params };
+
+  const query = useQuery<{ data: MyHospitalHistoryRow[] }, Error>({
+    queryKey: myHospitalKeys.history(merged),
+    queryFn: ({ signal }) =>
+      getMyHospitalHistory(merged, { token: accessToken ?? "", signal }).then(
+        (res) => ({ data: res.data }),
+      ),
+    enabled: enabled && !!accessToken,
+    staleTime: 30 * 1000,
+  });
+
+  return {
+    rows: query.data?.data ?? [],
     isLoading: query.isLoading,
     isError: query.isError,
     error: query.error,

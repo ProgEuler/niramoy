@@ -232,7 +232,6 @@ export function UpdateHistory({ hospital }: Props) {
         </CardContent>
       </Card>
 
-      <Card>
         <CardContent className="p-0">
           <AgTable<AuditEntry>
             rowData={filtered}
@@ -247,7 +246,6 @@ export function UpdateHistory({ hospital }: Props) {
             noRowsText="No matching changes"
           />
         </CardContent>
-      </Card>
     </div>
   );
 }

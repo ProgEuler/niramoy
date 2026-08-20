@@ -205,7 +205,7 @@ export function UpdateBedCountsForm({ hospital }: Props) {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 max-w-3xl">
       <Card>
         <CardContent className="space-y-4 p-4">
           {/* Header */}
