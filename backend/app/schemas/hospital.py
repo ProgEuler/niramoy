@@ -35,6 +35,16 @@ class HospitalBase(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+class AvailabilityTrendPoint(BaseModel):
+    """One bucket of the 7-day availability trend surfaced on the
+    hospital detail page's activity chart. `date` is the UTC day (YYYY-MM-DD),
+    `count` is the number of bed-count / profile / pricing updates the
+    admin recorded on that day."""
+
+    date: str
+    count: int
+
+
 class HospitalOut(HospitalBase):
     """Full hospital detail — used by GET /api/public/hospitals/{id}."""
 
@@ -57,6 +67,10 @@ class HospitalOut(HospitalBase):
     last_updated: Optional[datetime] = None
     distance_km: Optional[float] = None
     availability_color: Optional[str] = None
+    # 7-day activity trend — list of (date, count) buckets in chronological
+    # order. Always length 7 from the endpoint; days with no updates have
+    # `count: 0`. Frontend renders with the shadcn LineChart.
+    availability_trend: List[AvailabilityTrendPoint] = Field(default_factory=list)
 
 
 class HospitalSummaryOut(BaseModel):

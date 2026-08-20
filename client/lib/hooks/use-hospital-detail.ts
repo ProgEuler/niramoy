@@ -35,6 +35,11 @@ function findSeedBySlug(slug: string): Hospital | undefined {
 
 export interface UseHospitalDetailResult {
   hospital: Hospital | undefined;
+  /** Raw `HospitalDetail` payload from the live API (when the slug
+   *  resolves to a numeric id). Undefined for legacy seed slugs and
+   *  while the query is in flight. Components that need fields beyond
+   *  the mapped `Hospital` shape (e.g. `availability_trend`) read this. */
+  detail: HospitalDetail | undefined;
   isLoading: boolean;
   isError: boolean;
   error: Error | null;
@@ -53,14 +58,15 @@ export function useHospitalDetail(slug: string | undefined): UseHospitalDetailRe
   // Legacy seed slug — no live API call needed.
   const seedHospital = slug && id === null ? findSeedBySlug(slug) : undefined;
 
-  const query = useQuery<Hospital, Error>({
+  const query = useQuery<{ mapped: Hospital; detail: HospitalDetail }, Error>({
     queryKey: hospitalDetailKeys.detail(slug ?? ""),
     enabled: id !== null,
     queryFn: async ({ signal }) => {
       const detail: HospitalDetail = await getHospitalById(id!, { signal });
       // `summaryToHospital` accepts a HospitalSummary (which HospitalDetail
       // extends) plus an optional detail-level enrichment.
-      return summaryToHospital(detail, detail);
+      const mapped = summaryToHospital(detail, detail);
+      return { mapped, detail };
     },
     // 30s — detail pages aren't a tight loop like search.
     staleTime: 30 * 1000,
@@ -69,6 +75,7 @@ export function useHospitalDetail(slug: string | undefined): UseHospitalDetailRe
   if (seedHospital) {
     return {
       hospital: seedHospital,
+      detail: undefined,
       isLoading: false,
       isError: false,
       error: null,
@@ -77,7 +84,8 @@ export function useHospitalDetail(slug: string | undefined): UseHospitalDetailRe
   }
 
   return {
-    hospital: query.data,
+    hospital: query.data?.mapped,
+    detail: query.data?.detail,
     isLoading: query.isLoading,
     isError: query.isError,
     error: query.error,

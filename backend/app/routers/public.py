@@ -243,14 +243,16 @@ async def get_hospital_public(
     last_updated = bed.last_updated if bed else None
     stale = is_stale(last_updated, settings.stale_threshold_hours)
 
-    # 7-day availability trend from UpdateHistory.
+    # 7-day availability trend from UpdateHistory. The DB query groups
+    # by day; we then materialize a length-7 array (oldest → today) so
+    # the chart on the detail page doesn't have to deal with sparse days.
     cutoff_dt = datetime.now(tz=timezone.utc).replace(microsecond=0)
     cutoff = cutoff_dt.timestamp() - 7 * 24 * 3600
     trend_rows = (
         await db.execute(
             select(
                 func.date_trunc("day", UpdateHistory.created_at).label("day"),
-                func.count(UpdateHistory.id),
+                func.count(UpdateHistory.id).label("count"),
             )
             .where(
                 UpdateHistory.hospital_id == h.id,
@@ -260,6 +262,26 @@ async def get_hospital_public(
             .order_by("day")
         )
     ).all()
+
+    # Materialize a dense 7-day array. Today appears last.
+    today_utc = datetime.now(tz=timezone.utc).date()
+    bucket_by_date: dict[str, int] = {}
+    for row in trend_rows:
+        day = row.day
+        if hasattr(day, "date"):
+            iso = day.date().isoformat()
+        else:
+            iso = str(day)[:10]
+        bucket_by_date[iso] = int(row.count)
+    availability_trend = [
+        {
+            "date": (today_utc.fromordinal(today_utc.toordinal() - (6 - i))).isoformat(),
+            "count": bucket_by_date.get(
+                (today_utc.fromordinal(today_utc.toordinal() - (6 - i))).isoformat(), 0
+            ),
+        }
+        for i in range(7)
+    ]
 
     return HospitalOut(
         id=h.id,
@@ -304,6 +326,7 @@ async def get_hospital_public(
             last_updated=last_updated,
             stale_hours=settings.stale_threshold_hours,
         ),
+        availability_trend=availability_trend,
     )
 
 

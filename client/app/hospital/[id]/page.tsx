@@ -8,6 +8,7 @@ import { SiteNavbar } from "@/components/home/site-navbar";
 import { SiteFooter } from "@/components/home/site-footer";
 import { Disclaimer } from "@/components/find-care/disclaimer";
 import { HospitalHeader } from "@/components/hospital-detail/hospital-header";
+import { HospitalDetailSkeleton } from "@/components/hospital-detail/hospital-detail-skeleton";
 import { BedAvailabilityPanel } from "@/components/hospital-detail/bed-availability-panel";
 import { HospitalInfoSection } from "@/components/hospital-detail/hospital-info-section";
 import { AvailabilityHistoryChart } from "@/components/hospital-detail/availability-history-chart";
@@ -21,7 +22,7 @@ const COMPARE_KEY = "niramoy:compareIds";
 export default function HospitalDetailPage() {
   const params = useParams<{ id: string }>();
   const slug = params?.id;
-  const { hospital, isLoading, isError } = useHospitalDetail(slug);
+  const { hospital, detail, isLoading, isError } = useHospitalDetail(slug);
 
   const [compareIds, setCompareIds] = useState<string[]>([]);
 
@@ -50,8 +51,8 @@ export default function HospitalDetailPage() {
     return (
       <>
         <SiteNavbar />
-        <main className="mx-auto w-full max-w-3xl px-4 py-16 text-center sm:px-6">
-          <p className="text-sm text-muted-foreground">Loading hospital…</p>
+        <main className="flex min-h-[calc(100dvh-3.5rem)] flex-col">
+          <HospitalDetailSkeleton />
         </main>
         <SiteFooter />
       </>
@@ -112,7 +113,7 @@ export default function HospitalDetailPage() {
         <div className="mx-auto w-full max-w-7xl space-y-8 px-4 py-6 sm:px-6 sm:py-8">
           <BedAvailabilityPanel hospital={hospital} />
           <HospitalInfoSection hospital={hospital} />
-          <AvailabilityHistoryChart hospital={hospital} />
+          <AvailabilityHistoryChart hospital={hospital} detail={detail} />
           {/* <ReviewsSection hospital={hospital} /> */}
           {/* <RelatedHospitals hospital={hospital} /> */}
           <Disclaimer />

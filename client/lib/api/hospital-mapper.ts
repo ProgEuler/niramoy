@@ -19,6 +19,7 @@ import type {
   BangladeshDivision,
 } from "@/lib/types/hospital";
 import type { ALL_BED_TYPES } from "@/lib/types/hospital";
+import { DIVISION_DISTRICTS } from "@/lib/use-districts";
 import type { HospitalSummary, HospitalDetail } from "./hospitals";
 
 type BedType = (typeof ALL_BED_TYPES)[number];
@@ -33,6 +34,27 @@ const VALID_DIVISIONS: ReadonlySet<BangladeshDivision> = new Set([
   "Mymensingh",
   "Sylhet",
 ]);
+
+/**
+ * Reverse index: lowercased district name → its division. Built once at
+ * module load from `DIVISION_DISTRICTS` so we can derive a hospital's
+ * division from its free-text `district` field without a backend round
+ * trip.
+ *
+ * The backend stores `hospital.district` as a free-text string and the
+ * `/api/public/search` summary always returns `division: null`. Without
+ * this lookup, every hospital maps to the same default division ("Dhaka")
+ * and the division filter on /find-care silently shows nothing.
+ */
+const DISTRICT_TO_DIVISION: ReadonlyMap<string, BangladeshDivision> = (() => {
+  const map = new Map<string, BangladeshDivision>();
+  for (const div of Object.keys(DIVISION_DISTRICTS) as BangladeshDivision[]) {
+    for (const d of DIVISION_DISTRICTS[div]) {
+      map.set(d.toLowerCase(), div);
+    }
+  }
+  return map;
+})();
 
 /**
  * Slug-ify a hospital for the URL `/hospital/<id>` route. Matches the
@@ -67,14 +89,32 @@ export function parseSlugId(slug: string): number | null {
 }
 
 /**
- * Pick a division. Backend may return null when district-to-division isn't
- * mapped yet — fallback to "Dhaka" so the UI's typed `BangladeshDivision`
- * union still accepts it. (Better: surface "Unknown" to the user once the
- * division reference data covers all rows.)
+ * Pick a division. Tries three sources, in order:
+ *
+ *   1. The backend's `division` field (currently always null on summaries —
+ *      kept for forward compatibility once the backend exposes it).
+ *   2. The district → division reverse index, keyed by the hospital's
+ *      free-text `district` string. This is what actually populates the
+ *      division today.
+ *   3. "Dhaka" as a last-resort fallback so the typed `BangladeshDivision`
+ *      union still accepts the value.
+ *
+ * Without step (2), every hospital collapses to "Dhaka" and the division
+ * filter on /find-care silently shows zero results.
  */
-function toDivision(value: string | null | undefined): BangladeshDivision {
-  if (value && VALID_DIVISIONS.has(value as BangladeshDivision)) {
-    return value as BangladeshDivision;
+function toDivision(
+  backendDivision: string | null | undefined,
+  district?: string | null,
+): BangladeshDivision {
+  if (
+    backendDivision &&
+    VALID_DIVISIONS.has(backendDivision as BangladeshDivision)
+  ) {
+    return backendDivision as BangladeshDivision;
+  }
+  if (district) {
+    const fromDistrict = DISTRICT_TO_DIVISION.get(district.trim().toLowerCase());
+    if (fromDistrict) return fromDistrict;
   }
   return "Dhaka";
 }
@@ -147,7 +187,7 @@ export function summaryToHospital(
     // Bengali display name lives on the detail endpoint today; until then
     // show the English name in both fields so the header doesn't break.
     name_bn: detail?.name ?? s.name,
-    division: toDivision(s.division),
+    division: toDivision(s.division, s.district),
     district: s.district || "Dhaka",
     lat: s.latitude ?? 23.685, // Center of Bangladesh as a safe fallback.
     lng: s.longitude ?? 90.356,

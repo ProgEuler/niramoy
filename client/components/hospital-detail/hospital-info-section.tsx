@@ -129,10 +129,10 @@ export function HospitalInfoSection({ hospital }: Props) {
         </CardContent>
       </Card>
 
-      <Card size="sm" className="overflow-hidden">
+      <Card size="sm" className="overflow-hidden p-0">
         <CardContent className="p-0">
           {mounted ? (
-            <div className="relative h-72 w-full sm:h-80">
+            <div className="relative h-72 w-full sm:h-98">
               <Map
                 center={[hospital.lng, hospital.lat]}
                 zoom={14}
@@ -154,11 +154,6 @@ export function HospitalInfoSection({ hospital }: Props) {
               Loading map…
             </div>
           )}
-          <div className="border-t bg-card p-3 text-[11px] text-muted-foreground">
-            <span className="font-mono">
-              {hospital.lat.toFixed(4)}, {hospital.lng.toFixed(4)}
-            </span>
-          </div>
         </CardContent>
       </Card>
     </section>

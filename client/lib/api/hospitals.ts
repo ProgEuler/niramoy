@@ -68,16 +68,16 @@ export interface HospitalDetail extends HospitalSummary {
   facilities: string[];
   osm_id: number | null;
   operator_name: string | null;
-  /** 7-day availability trend, populated by the detail endpoint. */
+  /** 7-day activity trend, populated by the detail endpoint. Always
+   *  length 7 (oldest → today); days with no updates have `count: 0`. */
   availability_trend?: AvailabilityTrendPoint[];
 }
 
 export interface AvailabilityTrendPoint {
+  /** ISO calendar date (YYYY-MM-DD) the bucket covers. */
   date: string;
-  icu_available: number;
-  nicu_available: number;
-  ccu_available: number;
-  hdu_available: number;
+  /** Number of update-history rows the admin recorded on that day. */
+  count: number;
 }
 
 /** Sort keys accepted by the backend `/search` endpoint. */
