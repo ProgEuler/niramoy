@@ -90,8 +90,8 @@ export default function ManagementDashboardPage() {
                       <Card key={t} size="sm">
                         <CardContent className="space-y-1.5 p-3">
                           <div className="flex items-center justify-between">
-                            <span className="font-heading text-xs font-semibold text-foreground">
-                              {LABEL[t]} available
+                            <span className="font-heading text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                              {LABEL[t]}
                             </span>
                             <span
                               className="inline-block size-2 rounded-full"
@@ -101,12 +101,12 @@ export default function ManagementDashboardPage() {
                           </div>
                           <div className="flex items-baseline gap-1.5">
                             <span
-                              className="font-heading text-2xl font-semibold tabular-nums"
+                              className="font-heading text-5xl font-bold leading-none tabular-nums"
                               style={{ color }}
                             >
                               {total === 0 ? "—" : available}
                             </span>
-                            <span className="text-[11px] text-muted-foreground tabular-nums">
+                            <span className="text-sm font-medium text-muted-foreground tabular-nums">
                               / {total}
                             </span>
                           </div>

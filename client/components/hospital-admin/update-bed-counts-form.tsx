@@ -292,13 +292,13 @@ export function UpdateBedCountsForm({ hospital }: Props) {
                   )}
                 >
                   {/* Header strip: label + capacity + free/total pill */}
-                  <div className="mb-3 flex items-center justify-between gap-2">
+                  <div className="mb-3 flex items-baseline justify-between gap-2">
                     <div className="min-w-0">
                       <div className="flex items-center gap-2">
-                        <span className="font-heading text-sm font-semibold text-foreground">
+                        <span className="font-heading text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
                           {LABEL[t]}
                         </span>
-                        <span className="text-[10px] text-muted-foreground">
+                        <span className="hidden text-[10px] text-muted-foreground sm:inline">
                           · {FULL_NAME[t]}
                         </span>
                       </div>
@@ -306,18 +306,22 @@ export function UpdateBedCountsForm({ hospital }: Props) {
                         Capacity: {total} beds
                       </p>
                     </div>
-                    <span
-                      className={cn(
-                        "inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold tabular-nums",
-                        pillTone,
-                      )}
-                      title={`${draftAvailable} of ${total} beds free`}
-                    >
-                      {draftAvailable}/{total} free
-                      {total > 0 && (
-                        <span className="opacity-70">· {freePct}%</span>
-                      )}
-                    </span>
+                    <div className="flex items-baseline gap-1.5">
+                      <span
+                        className={cn(
+                          "font-heading text-5xl font-bold leading-none tabular-nums",
+                          total === 0
+                            ? "text-muted-foreground"
+                            : pillPillText(fillPct, total),
+                        )}
+                        title={`${draftAvailable} of ${total} beds free`}
+                      >
+                        {total === 0 ? "—" : draftAvailable}
+                      </span>
+                      <span className="text-sm font-medium text-muted-foreground tabular-nums">
+                        / {total}
+                      </span>
+                    </div>
                   </div>
 
                   {/* Editor row: a single stepper for "New available" */}
@@ -441,21 +445,40 @@ function Field({
   );
 }
 
-/** Tailwind classes for the free/total pill based on % free. */
+/** Tone class for the free/total pill background based on % occupied. */
+type ToneName = "grey" | "red" | "amber" | "green";
+
+const TONE_BG: Record<ToneName, string> = {
+  grey: "bg-muted text-muted-foreground",
+  red: "bg-destructive/10 text-destructive",
+  amber: "bg-amber-500/10 text-amber-700 dark:text-amber-400",
+  green: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400",
+};
+
+const TONE_TEXT: Record<ToneName, string> = {
+  grey: "text-muted-foreground",
+  red: "text-destructive",
+  amber: "text-amber-700 dark:text-amber-400",
+  green: "text-emerald-700 dark:text-emerald-400",
+};
+
+/** Pick the tone name for a given fill %. */
+function toneNameFor(fillPct: number, total: number): ToneName {
+  if (total === 0) return "grey";
+  if (fillPct >= 90) return "red";
+  if (fillPct >= 50) return "amber";
+  return "green";
+}
+
+/** Pill background+text color classes for the free/total pill. */
 function pillToneFor(fillPct: number, total: number): string {
-  if (total === 0) {
-    return "bg-muted text-muted-foreground";
-  }
-  if (fillPct >= 90) {
-    // ≥ 90% occupied → red
-    return "bg-destructive/10 text-destructive";
-  }
-  if (fillPct >= 50) {
-    // 50–90% occupied → amber
-    return "bg-amber-500/10 text-amber-700 dark:text-amber-400";
-  }
-  // < 50% occupied → green
-  return "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400";
+  return TONE_BG[toneNameFor(fillPct, total)];
+}
+
+/** Text-only color classes — used for the big number above each row
+ *  so the visual emphasis stays in sync with the pill. */
+function pillPillText(fillPct: number, total: number): string {
+  return TONE_TEXT[toneNameFor(fillPct, total)];
 }
 
 /**

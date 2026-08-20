@@ -1,20 +1,5 @@
 "use client"
 
-/**
- * Marketplace-style hospital card.
- *
- * One card per hospital on the /find-care results grid. Designed to read at a
- * glance during an emergency:
- *   - Header: hero gradient swatch (no real images), name, verified badge
- *   - Location row: division · district · address snippet
- *   - 4-bed availability grid: ICU/NICU/CCU/HDU with progress bars + cost
- *   - Footer: rating, last updated, Call / Directions / View Details
- *
- * Real-time data flows in via the same `useHospitalStore` the rest of the
- * app uses, so changes from a hospital admin's update land here without a
- * reload.
- */
-
 import Link from "next/link"
 import {
   IconArrowUpRight,
@@ -22,7 +7,6 @@ import {
   IconMapPin,
   IconPhone,
   IconRoute,
-  IconShieldCheck,
   IconStar,
   IconStarFilled,
 } from "@tabler/icons-react"
@@ -38,6 +22,7 @@ import {
 import { ALL_BED_TYPES } from "@/lib/types/hospital"
 import type { BedType, Hospital } from "@/lib/types/hospital"
 import { cn } from "@/lib/utils"
+import VerifiedBadge from "../ui/verified-badge"
 
 interface Props {
   hospital: Hospital
@@ -85,8 +70,9 @@ export function HospitalDetailCard({
       : `${formatTaka(minPrice)} – ${formatTaka(maxPrice)}`
 
   // Distance from user when available — only meaningful when geolocation is on.
-  const distanceKm =
-    userCoords ? haversineKm(userCoords, [hospital.lng, hospital.lat]) : null
+  const distanceKm = userCoords
+    ? haversineKm(userCoords, [hospital.lng, hospital.lat])
+    : null
 
   const rating = hospital.rating ?? 0
 
@@ -108,12 +94,6 @@ export function HospitalDetailCard({
 
         {/* Top-right badge cluster */}
         <div className="absolute top-2 right-2 flex items-center gap-1.5">
-          {hospital.verified && (
-            <span className="inline-flex items-center gap-0.5 rounded-full bg-niramoy-teal px-1.5 py-0.5 text-[10px] font-semibold text-white shadow-sm">
-              <IconShieldCheck className="size-2.5" />
-              Verified
-            </span>
-          )}
           {distanceKm !== null && (
             <span className="inline-flex items-center gap-0.5 rounded-full bg-card/90 px-1.5 py-0.5 text-[10px] font-semibold text-foreground shadow-sm backdrop-blur">
               <IconRoute className="size-2.5 text-niramoy-teal" />
@@ -126,9 +106,12 @@ export function HospitalDetailCard({
       <CardContent className="space-y-3 p-4">
         {/* Title + location */}
         <div>
-          <h3 className="font-heading text-base font-semibold leading-tight text-foreground sm:text-lg">
-            {hospital.name}
-          </h3>
+          <span className="inline-flex items-center gap-1">
+            <h3 className="font-heading text-base leading-tight font-semibold text-foreground sm:text-lg">
+              {hospital.name}
+            </h3>
+            {hospital.verified && <VerifiedBadge />}
+          </span>
           <p className="mt-0.5 flex items-start gap-1 text-xs text-muted-foreground">
             <IconMapPin className="mt-0.5 size-3 shrink-0" />
             <span className="line-clamp-2">
@@ -187,9 +170,11 @@ export function HospitalDetailCard({
                 </div>
 
                 <div className="mt-1 flex items-baseline justify-between gap-1">
-                  <span className="font-semibold tabular-nums text-foreground text-xs">
+                  <span className="text-xs font-semibold text-foreground tabular-nums">
                     {isFree ? (
-                      <span className="text-muted-foreground text-[11px]">N/A</span>
+                      <span className="text-[11px] text-muted-foreground">
+                        N/A
+                      </span>
                     ) : (
                       <>
                         <span style={{ color }}>{available}</span>
@@ -197,8 +182,12 @@ export function HospitalDetailCard({
                       </>
                     )}
                   </span>
-                  <span className="text-[10px] tabular-nums text-muted-foreground">
-                    {isFree ? "—" : hospital.price[t] === 0 ? "Free" : formatTaka(hospital.price[t])}
+                  <span className="text-[10px] text-muted-foreground tabular-nums">
+                    {isFree
+                      ? "—"
+                      : hospital.price[t] === 0
+                        ? "Free"
+                        : formatTaka(hospital.price[t])}
                   </span>
                 </div>
               </div>
@@ -226,7 +215,10 @@ export function HospitalDetailCard({
             size="sm"
             className="h-8 gap-1.5 bg-destructive px-3 text-xs text-white hover:bg-destructive/90"
           >
-            <a href={`tel:${hospital.phone}`} aria-label={`Call ${hospital.name}`}>
+            <a
+              href={`tel:${hospital.phone}`}
+              aria-label={`Call ${hospital.name}`}
+            >
               <IconPhone className="size-3.5" />
               Call
             </a>
@@ -303,7 +295,7 @@ function RatingStars({ value }: { value: number }) {
           />
         )
       )}
-      <span className="ml-1 text-[11px] font-medium tabular-nums text-foreground">
+      <span className="ml-1 text-[11px] font-medium text-foreground tabular-nums">
         {value.toFixed(1)}
       </span>
     </span>

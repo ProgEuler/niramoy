@@ -1,37 +1,5 @@
 "use client"
 
-/**
- * /find-care — public search results page.
- *
- * Marketplace-style: a filter rail on the left and a grid of hospital
- * detail cards on the right. The home page `QuickSearch` and the home
- * "See all hospitals" CTA both land here, encoding the user's picks as
- * query params:
- *
- *   /find-care?division=Dhaka&district=Dhaka&beds=icu,nicu
- *
- * On mount we hydrate the filter reducer from those params so the filter
- * rail, header pills, and result cards all show the selection from the
- * home page.
- *
- * Data source: `useHospitalSearch` calls GET /api/public/search via
- * TanStack Query. The page translates the UI filter state into API
- * params (single `bed_type` + `district` + `sort_by`), runs the result
- * through the existing client-side `applyFilters` for division / multi-bed
- * / cost / rating refinement, then renders.
- *
- * Why client-side refinement? The backend exposes a single `bed_type`
- * filter and doesn't accept a division. Combining server-side search
- * with the same client-side reducer the rest of the app uses means the
- * UI stays consistent and Snappy: filters update instantly without a
- * round-trip when the user toggles ICU/CCU or adjusts cost.
- *
- * Why not the map? The product brief for the home-page search is
- * "find a hospital, see details, make a call" — a scrollable card list
- * is faster to scan during an emergency than a map. The dedicated /map
- * page still exists for users who want geospatial exploration.
- */
-
 import { Suspense, useEffect, useMemo, useReducer, useState } from "react"
 import { useSearchParams } from "next/navigation"
 import {
@@ -111,11 +79,6 @@ function FindCareInner() {
     () => buildInitialState(params)
   )
 
-  // ── Server-side query ────────────────────────────────────────────────
-  // Translate the UI filter state into a backend `HospitalSearchParams`.
-  // The backend only accepts ONE bed type, so when the user has multiple
-  // selected we send the first and let `applyFilters` (client-side) do
-  // the rest of the matching against the larger result set.
   const [retryIndex, setRetryIndex] = useState(0)
   const apiParams = useMemo<HospitalSearchParams>(
     () => buildApiParams(state),
@@ -136,19 +99,11 @@ function FindCareInner() {
     return undefined
   }, [isError, retryIndex])
 
-  // ── Client-side refinement ───────────────────────────────────────────
-  // The backend handles single-bed-type + district + sort + cost + rating
-  // matches, but the UI also needs division filtering and multi-bed
-  // selection. Run the page's existing reducer over the API result.
   const filtered = useMemo(
     () => applyFilters(hospitals, state),
     [hospitals, state]
   )
 
-  // ── Stats for the live-stats-bar ─────────────────────────────────────
-  // Derived from the full unfiltered API response so the numbers don't
-  // jump around as filters change. (The dedicated /stats endpoint is
-  // currently unstable on the backend, hence local derivation.)
   const stats = useMemo<HospitalStats>(
     () => computeStats(hospitals) ?? defaultStats(),
     [hospitals]
@@ -159,7 +114,7 @@ function FindCareInner() {
     <>
       <SiteNavbar />
       <main className="flex min-h-[calc(100dvh-3.5rem)] flex-col bg-muted/10">
-        <PageHeader totalHospitals={totalHospitals} isFetching={isFetching} />
+        {/* <PageHeader totalHospitals={totalHospitals} isFetching={isFetching} /> */}
 
         <div className="mx-auto w-full max-w-7xl flex-1 px-4 py-6 sm:px-6">
           <div className="grid gap-6 lg:grid-cols-[320px_1fr]">
@@ -437,15 +392,6 @@ function defaultStats(): HospitalStats {
   }
 }
 
-/**
- * Build a filter state from the home-page `QuickSearch` URL:
- *   ?division=<BangladeshDivision|all>
- *   &district=<string|all>
- *   &beds=icu,nicu,ccu,hdu           (comma-separated; subset of ALL_BED_TYPES)
- *
- * Unknown values fall back to the canonical initial defaults so a stale
- * or hand-edited URL never crashes the page.
- */
 function buildInitialState(
   params: ReturnType<typeof useSearchParams>
 ): typeof INITIAL_FILTER_STATE {
@@ -479,20 +425,6 @@ function buildInitialState(
   }
 }
 
-/**
- * Translate UI `FilterState` into `HospitalSearchParams`.
- *
- * The backend only accepts:
- *   - one `bed_type`
- *   - one `district`
- *   - numeric cost / rating bounds
- *   - `sort_by`
- *
- * Multi-bed selection, division filtering, `onlyAvailable`, and the radius
- * filter are NOT sent to the server — they are applied locally by
- * `applyFilters` on the page so the UI stays consistent with the rest of
- * the app.
- */
 function buildApiParams(state: FilterState): HospitalSearchParams {
   const params: HospitalSearchParams = {
     sort_by: sortToBackendSort(state.sort),
