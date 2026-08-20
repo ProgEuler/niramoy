@@ -1,8 +1,3 @@
-"""
-Bed-availability service: applies updates, runs the moderation threshold,
-writes update_history rows, and emits WebSocket events on live updates.
-"""
-
 from __future__ import annotations
 
 from typing import Dict, Optional

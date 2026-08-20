@@ -1,14 +1,5 @@
 "use client";
 
-/**
- * PAGE 5 — Update History.
- *
- * Full audit log of every change this hospital has ever made through the
- * portal. Filter by date range and by type; export the filtered set as CSV.
- * Status badges (Live / Pending / Rejected) make moderation state obvious;
- * rejected rows expose the rejection reason inline.
- */
-
 import { useMemo } from "react";
 import { UpdateHistory } from "@/components/hospital-admin/update-history";
 import { useHospitalStore } from "@/lib/use-hospital-store";
@@ -38,15 +29,6 @@ export default function ManagementHistoryPage() {
 
   return (
     <div className="flex min-h-[calc(100dvh-3.5rem)] flex-col bg-muted/20">
-      <div className="border-b bg-card px-4 py-3 sm:px-6">
-        <h1 className="font-heading text-xl font-semibold tracking-tight">
-          Update history
-        </h1>
-        <p className="text-xs text-muted-foreground">
-          Full audit log for {hospital.name}. Filter by date and type, or
-          export to CSV.
-        </p>
-      </div>
 
       <div className="flex-1 p-4 sm:p-6">
         <UpdateHistory hospital={hospital} />

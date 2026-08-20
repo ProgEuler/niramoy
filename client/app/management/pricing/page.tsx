@@ -1,12 +1,5 @@
 "use client";
 
-/**
- * PAGE 3 — Update Pricing.
- *
- * Cost per day in BDT for each bed type. Changes less frequently than bed
- * counts. Public hospitals typically leave this at ৳0 (free).
- */
-
 import { useMemo } from "react";
 import { UpdatePricingForm } from "@/components/hospital-admin/update-pricing-form";
 import { useHospitalStore } from "@/lib/use-hospital-store";
@@ -36,15 +29,6 @@ export default function ManagementPricingPage() {
 
   return (
     <div className="flex min-h-[calc(100dvh-3.5rem)] flex-col bg-muted/20">
-      <div className="border-b bg-card px-4 py-3 sm:px-6">
-        <h1 className="font-heading text-xl font-semibold tracking-tight">
-          Update pricing
-        </h1>
-        <p className="text-xs text-muted-foreground">
-          Set the cost per day in BDT for {hospital.name}. Public hospitals
-          typically set ৳0 (free).
-        </p>
-      </div>
 
       <div className="flex-1 p-4 sm:p-6">
         <UpdatePricingForm hospital={hospital} />

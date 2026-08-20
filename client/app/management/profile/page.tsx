@@ -1,13 +1,5 @@
 "use client";
 
-/**
- * PAGE 4 — Hospital Profile.
- *
- * Address, phones, description, photo upload, and a draggable map pin for
- * correcting the location shown on the public page. Hospital name, division,
- * and district are locked (those change via system admin re-verification).
- */
-
 import { useMemo } from "react";
 import { UpdateProfileForm } from "@/components/hospital-admin/update-profile-form";
 import { useHospitalStore } from "@/lib/use-hospital-store";
@@ -37,16 +29,6 @@ export default function ManagementProfilePage() {
 
   return (
     <div className="flex min-h-[calc(100dvh-3.5rem)] flex-col bg-muted/20">
-      <div className="border-b bg-card px-4 py-3 sm:px-6">
-        <h1 className="font-heading text-xl font-semibold tracking-tight">
-          Hospital profile
-        </h1>
-        <p className="text-xs text-muted-foreground">
-          Update {hospital.name}&rsquo;s contact info, description, photo, and
-          map pin. Hospital name can&rsquo;t be changed here — contact a system
-          admin.
-        </p>
-      </div>
 
       <div className="flex-1 p-4 sm:p-6">
         <UpdateProfileForm hospital={hospital} />
