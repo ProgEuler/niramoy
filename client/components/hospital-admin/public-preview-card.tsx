@@ -1,10 +1,5 @@
 "use client";
 
-/**
- * Mini preview of how the hospital appears in public search. Links to the
- * public detail page so an admin can sanity-check the listing.
- */
-
 import Link from "next/link";
 import { IconExternalLink } from "@tabler/icons-react";
 import { Card, CardContent } from "@/components/ui/card";

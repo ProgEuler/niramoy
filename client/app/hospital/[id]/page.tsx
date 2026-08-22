@@ -61,30 +61,18 @@ export default function HospitalDetailPage() {
 
   if (isError || !hospital) {
     return (
-      <>
+      <div className="flex min-h-[100dvh] flex-col">
         <SiteNavbar />
         <main className="mx-auto w-full max-w-3xl px-4 py-16 text-center sm:px-6">
           <h1 className="font-heading text-2xl font-semibold">
             Hospital not found
           </h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            We couldn’t find a hospital with the id{" "}
-            <code className="rounded bg-muted px-1.5 py-0.5 text-xs">
-              {slug}
-            </code>
-            . It may have been removed or the link is incorrect.
+            We couldn’t find a hospital. It may have been removed or the link is incorrect.
           </p>
-          <div className="mt-6">
-            <Button asChild size="sm">
-              <Link href="/find-care">
-                <IconArrowLeft className="size-3.5" />
-                Back to search
-              </Link>
-            </Button>
-          </div>
         </main>
         <SiteFooter />
-      </>
+      </div>
     );
   }
 

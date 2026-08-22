@@ -3,13 +3,16 @@
 import Link from "next/link"
 import { useState } from "react"
 import {
+  IconLayoutDashboard,
   IconLanguage,
   IconMenu2,
-  IconStethoscope,
+  IconShieldCog,
   IconX,
 } from "@tabler/icons-react"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
+import { useAuth } from "@/lib/auth/use-auth"
+import { homeRouteFor } from "@/lib/auth/guards"
 
 const NAV_LINKS = [
   { href: "/", label: "Home" },
@@ -20,9 +23,26 @@ const NAV_LINKS = [
 export function SiteNavbar() {
   const [language, setLanguage] = useState<"en" | "bn">("en")
   const [mobileOpen, setMobileOpen] = useState(false)
+  const { isAuthed, hydrated, role, hospitalId, hospitalIsVerified } =
+    useAuth()
 
   const tagline =
     language === "en" ? "Find critical care beds" : "জরুরি বেড খুঁজুন"
+
+  // Decide what the right-cluster button should be once auth has hydrated.
+  // Pre-hydration we show "Login" so SSR + first paint stay stable; the
+  // auth store rehydrates from localStorage on mount and the button flips
+  // without a layout shift if needed.
+  const dashboardHref =
+    hydrated && isAuthed
+      ? homeRouteFor(role, {
+          hasHospital: hospitalId !== null,
+          hospitalIsVerified,
+        })
+      : null
+
+  const dashboardLabel =
+    role === "system_admin" ? "Admin" : "Dashboard"
 
   return (
     <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
@@ -57,13 +77,30 @@ export function SiteNavbar() {
 
         {/* Right cluster */}
         <div className="flex items-center gap-2">
-          <Button
-            asChild
-            size="sm"
-            className="bg-niramoy-teal text-white hover:bg-niramoy-teal/90"
-          >
-            <Link href="/login">Login</Link>
-          </Button>
+          {dashboardHref ? (
+            <Button
+              asChild
+              size="sm"
+              className="bg-niramoy-teal text-white hover:bg-niramoy-teal/90"
+            >
+              <Link href={dashboardHref}>
+                {role === "system_admin" ? (
+                  <IconShieldCog className="size-3.5" />
+                ) : (
+                  <IconLayoutDashboard className="size-3.5" />
+                )}
+                {dashboardLabel}
+              </Link>
+            </Button>
+          ) : (
+            <Button
+              asChild
+              size="sm"
+              className="bg-niramoy-teal text-white hover:bg-niramoy-teal/90"
+            >
+              <Link href="/login">Login</Link>
+            </Button>
+          )}
 
           {/* Mobile menu toggle */}
           <Button
@@ -99,6 +136,17 @@ export function SiteNavbar() {
                 </Link>
               </li>
             ))}
+            {dashboardHref && (
+              <li>
+                <Link
+                  href={dashboardHref}
+                  onClick={() => setMobileOpen(false)}
+                  className="block rounded-md px-3 py-2 text-sm font-medium text-niramoy-teal hover:bg-muted"
+                >
+                  {dashboardLabel}
+                </Link>
+              </li>
+            )}
             <li className="mt-1 border-t pt-2">
               <div className="flex items-center gap-2 px-3 py-1.5">
                 <span className="text-[11px] font-medium text-muted-foreground">

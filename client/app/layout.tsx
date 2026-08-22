@@ -1,4 +1,5 @@
 import { Geist, Geist_Mono, Inter, Poppins } from "next/font/google"
+import type { Metadata } from "next"
 
 import "./globals.css"
 import { ThemeProvider } from "@/components/theme-provider"
@@ -23,6 +24,17 @@ const fontMono = Geist_Mono({
   subsets: ["latin"],
   variable: "--font-mono",
 })
+
+export const metadata: Metadata = {
+  title: "Niramoy",
+  description: "Find the right hospital for your patient — live bed availability across Bangladesh.",
+  icons: {
+    icon: [
+      // Primary SVG icon — modern browsers (Next.js emits the right rel + type).
+      { url: "/niramoy_favicon.svg", type: "image/svg+xml" },
+    ],
+  },
+}
 
 export default function RootLayout({
   children,

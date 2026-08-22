@@ -131,9 +131,9 @@ export default function ManagementDashboardPage() {
                 </div>
 
                 {/* Charts + public preview */}
-                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                <div className="grid gap-3 sm:grid-cols-1 lg:grid-cols-2">
                   <DashboardCharts hospital={hospital} />
-                  {/* <PublicPreviewCard hospital={hospital} /> */}
+                  <PublicPreviewCard hospital={hospital} />
                 </div>
 
                 {/* Last updated by / when */}
