@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import type { Route } from "next";
 import {
 	IconActivity,
 	IconBuildingHospital,
@@ -18,7 +19,7 @@ import type { UserRole } from "@/lib/api/auth";
 
 export type SidebarNavItem = {
 	title: string;
-	path?: string;
+	path?: Route;
 	icon?: ReactNode;
 	isActive?: boolean;
 	subItems?: SidebarNavItem[];

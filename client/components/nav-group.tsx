@@ -50,22 +50,34 @@ export function NavGroup({ label, items }: SidebarNavGroup) {
 														asChild
 														isActive={subItem.isActive}
 													>
-														<Link href={subItem.path}>
-															{subItem.icon}
-															<span>{subItem.title}</span>
-														</Link>
+														{subItem.path ? (
+															<Link href={subItem.path}>
+																{subItem.icon}
+																<span>{subItem.title}</span>
+															</Link>
+														) : (
+															<>
+																{subItem.icon}
+																<span>{subItem.title}</span>
+															</>
+														)}
 													</SidebarMenuSubButton>
 												</SidebarMenuSubItem>
 											))}
 										</SidebarMenuSub>
 									</CollapsibleContent>
 								</>
-							) : (
+							) : item.path ? (
 								<SidebarMenuButton asChild isActive={item.isActive}>
 									<Link href={item.path}>
 										{item.icon}
 										<span>{item.title}</span>
 									</Link>
+								</SidebarMenuButton>
+							) : (
+								<SidebarMenuButton isActive={item.isActive}>
+									{item.icon}
+									<span>{item.title}</span>
 								</SidebarMenuButton>
 							)}
 						</SidebarMenuItem>
