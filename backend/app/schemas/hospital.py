@@ -35,6 +35,16 @@ class HospitalBase(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
 
+class AvailabilityTrendPoint(BaseModel):
+    """One bucket of the 7-day availability trend surfaced on the
+    hospital detail page's activity chart. `date` is the UTC day (YYYY-MM-DD),
+    `count` is the number of bed-count / profile / pricing updates the
+    admin recorded on that day."""
+
+    date: str
+    count: int
+
+
 class HospitalOut(HospitalBase):
     """Full hospital detail — used by GET /api/public/hospitals/{id}."""
 
@@ -57,6 +67,10 @@ class HospitalOut(HospitalBase):
     last_updated: Optional[datetime] = None
     distance_km: Optional[float] = None
     availability_color: Optional[str] = None
+    # 7-day activity trend — list of (date, count) buckets in chronological
+    # order. Always length 7 from the endpoint; days with no updates have
+    # `count: 0`. Frontend renders with the shadcn LineChart.
+    availability_trend: List[AvailabilityTrendPoint] = Field(default_factory=list)
 
 
 class HospitalSummaryOut(BaseModel):
@@ -89,6 +103,8 @@ class HospitalSummaryOut(BaseModel):
     is_stale: bool = False
     availability_color: Optional[str] = None
     distance_km: Optional[float] = None
+    is_featured: bool = False
+    description: Optional[str] = None
 
     model_config = ConfigDict(from_attributes=True)
 
@@ -247,6 +263,7 @@ class HospitalUpdate(BaseModel):
     longitude: Optional[float] = Field(default=None, ge=-180, le=180)
     is_verified: Optional[bool] = None
     is_active: Optional[bool] = None
+    is_featured: Optional[bool] = None
     district: Optional[str] = Field(default=None, min_length=2, max_length=100)
 
 
@@ -260,6 +277,10 @@ class VerifyIn(BaseModel):
 class SuspendIn(BaseModel):
     is_suspended: bool
     reason: str = Field(min_length=1, max_length=500)
+
+
+class FeatureIn(BaseModel):
+    is_featured: bool
 
 
 # ── User management ────────────────────────────────────────────────────

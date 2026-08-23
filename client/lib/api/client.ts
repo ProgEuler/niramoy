@@ -104,6 +104,10 @@ export function createApiClient(config: Partial<ApiClientConfig> = {}) {
   ): Promise<T> {
     const headers: Record<string, string> = {
       Accept: "application/json",
+      // ngrok's free tier injects a browser-warning interstitial on first
+      // visit unless this header is set. It's a no-op for non-ngrok hosts
+      // and other intermediaries, so it's safe to send unconditionally.
+      "ngrok-skip-browser-warning": "true",
       ...(options.headers ?? {}),
     };
     if (body !== undefined) {

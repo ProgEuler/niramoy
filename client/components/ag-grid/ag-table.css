@@ -1,0 +1,44 @@
+/* AgTable overrides — keep aligned with shadcn/ui tokens in globals.css. */
+
+.ag-theme-quartz {
+  --ag-font-family: var(--font-sans);
+  --ag-font-size: 12px;
+}
+
+.ag-theme-quartz .ag-header-cell-label {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 500;
+}
+
+.ag-theme-quartz .ag-header-cell-text {
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.ag-theme-quartz .ag-row,
+.ag-theme-quartz .ag-row-hover {
+  cursor: default;
+}
+
+/* Action cell hover shouldn't show the default row-hover background change too aggressively. */
+.ag-theme-quartz .ag-cell.ag-cell-last-left-pinned,
+.ag-theme-quartz .ag-cell-inline-editing {
+  box-shadow: none;
+}
+
+.ag-theme-quartz .ag-row-hover .ag-cell {
+  background-color: transparent;
+}
+
+.ag-theme-quartz .ag-row-selected {
+  border-color: var(--primary);
+}
+
+.ag-theme-quartz .ag-paging-panel {
+  font-size: 11px;
+  height: 32px;
+  border-top: 1px solid var(--border);
+}

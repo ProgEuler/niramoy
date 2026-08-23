@@ -53,8 +53,19 @@ class Settings(BaseSettings):
     password_reset_ttl_minutes: int = Field(default=60)
 
     # ── CORS ──────────────────────────────────────────────────────────────
+    # Origins allowed to call the API. Override via the `cors_origins` env
+    # var as a comma-separated list, e.g.
+    #     cors_origins=http://localhost:3000,https://urchin-routing-city.ngrok-free.dev
+    #
+    # Note: we deliberately do NO.T include "*" here. Browsers refuse to send
+    # cookies / `Authorization` headers when the wildcard is combined with
+    # `allow_credentials=True` in CORSMiddleware, so the wildcard would be
+    # silently dropped anyway. List every origin explicitly instead
     cors_origins: List[str] = Field(
-        default_factory=lambda: ["http://localhost:3000", "*"]
+        default_factory=lambda: [
+            "http://localhost:3000",
+            "http://127.0.0.1:3000",
+        ]
     )
 
     # ── Bed data freshness ────────────────────────────────────────────────

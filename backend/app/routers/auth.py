@@ -1,16 +1,3 @@
-"""
-Auth router — /api/auth/*
-
-POST /api/auth/register-user           — Step 1: create account, returns token pair
-POST /api/auth/register-hospital       — Step 2: create hospital profile (authenticated)
-POST /api/auth/login
-POST /api/auth/register                — Legacy combined registration (kept for compatibility)
-POST /api/auth/forgot-password
-POST /api/auth/reset-password
-POST /api/auth/refresh
-GET  /api/auth/me
-"""
-
 from __future__ import annotations
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -44,9 +31,6 @@ from ..services.notification_service import send_password_reset_email
 
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
-
-
-# ── Step 1: Register user account ─────────────────────────────────────
 
 
 @router.post(

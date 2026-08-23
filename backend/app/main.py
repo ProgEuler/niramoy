@@ -1,10 +1,3 @@
-"""
-Niramoy FastAPI entrypoint.
-
-Wires CORS, routers, the WebSocket ConnectionManager singleton, and the
-async DB lifecycle.
-"""
-
 from __future__ import annotations
 
 import logging

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { IconStethoscope } from "@tabler/icons-react";
+import Image from "next/image";
 
 const FOOTER_LINKS = [
   { href: "/about", label: "About" },
@@ -22,9 +22,14 @@ export function SiteFooter() {
           {/* Brand + disclaimer */}
           <div className="space-y-3">
             <Link href="/" className="flex items-center gap-2">
-              <span className="flex size-7 items-center justify-center rounded-md bg-niramoy-teal text-white">
-                <IconStethoscope className="size-4" />
-              </span>
+              <Image
+                src="/niramoy_favicon.svg"
+                alt=""
+                width={28}
+                height={28}
+                className="size-7"
+                priority
+              />
               <span className="font-heading text-sm font-semibold">Niramoy</span>
             </Link>
             <p className="text-xs leading-relaxed text-muted-foreground">

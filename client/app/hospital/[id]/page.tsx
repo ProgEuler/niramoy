@@ -1,23 +1,4 @@
 "use client";
-
-/**
- * PAGE 3 — Hospital Detail (public, no login).
- *
- * Sections, top to bottom:
- *   1. HospitalHeader   — name, district, verification, action buttons
- *   2. BedAvailabilityPanel — 4 live cards with progress bars (SignalR-ready)
- *   3. HospitalInfoSection — address, embedded map, phones, hours, facility
- *                            checks, about paragraph
- *   4. AvailabilityHistoryChart — 7-day SVG line chart with bed-type tabs
- *   5. ReviewsSection   — overall rating, breakdown, individual reviews,
- *                          pagination, write-a-review (login-gated)
- *   6. RelatedHospitals — horizontal scroller of nearby alternatives
- *
- * Compare state is local (one hospital detail page at a time) — flipping the
- * "Add to Compare" bookmark persists in sessionStorage so a user can navigate
- * to /compare?ids=… without losing their selection across pages.
- */
-
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
@@ -27,21 +8,21 @@ import { SiteNavbar } from "@/components/home/site-navbar";
 import { SiteFooter } from "@/components/home/site-footer";
 import { Disclaimer } from "@/components/find-care/disclaimer";
 import { HospitalHeader } from "@/components/hospital-detail/hospital-header";
+import { HospitalDetailSkeleton } from "@/components/hospital-detail/hospital-detail-skeleton";
 import { BedAvailabilityPanel } from "@/components/hospital-detail/bed-availability-panel";
 import { HospitalInfoSection } from "@/components/hospital-detail/hospital-info-section";
 import { AvailabilityHistoryChart } from "@/components/hospital-detail/availability-history-chart";
 import { ReviewsSection } from "@/components/hospital-detail/reviews-section";
 import { RelatedHospitals } from "@/components/hospital-detail/related-hospitals";
-import { useHospitalStore } from "@/lib/use-hospital-store";
+import { useHospitalDetail } from "@/lib/hooks/use-hospital-detail";
 import type { Hospital } from "@/lib/types/hospital";
 
 const COMPARE_KEY = "niramoy:compareIds";
 
 export default function HospitalDetailPage() {
   const params = useParams<{ id: string }>();
-  const id = params?.id;
-  const { hospitals } = useHospitalStore();
-  const hospital: Hospital | undefined = hospitals.find((h) => h.id === id);
+  const slug = params?.id;
+  const { hospital, detail, isLoading, isError } = useHospitalDetail(slug);
 
   const [compareIds, setCompareIds] = useState<string[]>([]);
 
@@ -66,32 +47,32 @@ export default function HospitalDetailPage() {
     }
   }, [compareIds]);
 
-  if (!hospital) {
+  if (isLoading) {
     return (
       <>
+        <SiteNavbar />
+        <main className="flex min-h-[calc(100dvh-3.5rem)] flex-col">
+          <HospitalDetailSkeleton />
+        </main>
+        <SiteFooter />
+      </>
+    );
+  }
+
+  if (isError || !hospital) {
+    return (
+      <div className="flex min-h-[100dvh] flex-col">
         <SiteNavbar />
         <main className="mx-auto w-full max-w-3xl px-4 py-16 text-center sm:px-6">
           <h1 className="font-heading text-2xl font-semibold">
             Hospital not found
           </h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            We couldn’t find a hospital with the id{" "}
-            <code className="rounded bg-muted px-1.5 py-0.5 text-xs">
-              {id}
-            </code>
-            . It may have been removed or the link is incorrect.
+            We couldn’t find a hospital. It may have been removed or the link is incorrect.
           </p>
-          <div className="mt-6">
-            <Button asChild size="sm">
-              <Link href="/find-care">
-                <IconArrowLeft className="size-3.5" />
-                Back to search
-              </Link>
-            </Button>
-          </div>
         </main>
         <SiteFooter />
-      </>
+      </div>
     );
   }
 
@@ -120,9 +101,9 @@ export default function HospitalDetailPage() {
         <div className="mx-auto w-full max-w-7xl space-y-8 px-4 py-6 sm:px-6 sm:py-8">
           <BedAvailabilityPanel hospital={hospital} />
           <HospitalInfoSection hospital={hospital} />
-          <AvailabilityHistoryChart hospital={hospital} />
-          <ReviewsSection hospital={hospital} />
-          <RelatedHospitals hospital={hospital} />
+          <AvailabilityHistoryChart hospital={hospital} detail={detail} />
+          {/* <ReviewsSection hospital={hospital} /> */}
+          {/* <RelatedHospitals hospital={hospital} /> */}
           <Disclaimer />
         </div>
       </main>

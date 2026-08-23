@@ -20,6 +20,7 @@ import {
 import {
   approveUpdate,
   createAdminUser,
+  createHospital,
   deleteHospital,
   deleteUser,
   getAvailabilitySummary,
@@ -40,6 +41,7 @@ import {
   type AdminUser,
   type AvailabilitySummaryRow,
   type CreateAdminUserPayload,
+  type HospitalCreatePayload,
   type HospitalUpdatePayload,
   type ListHospitalsParams,
   type ListUpdatesParams,
@@ -192,6 +194,29 @@ export function useDeleteHospital(
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (id) => deleteHospital(id, token),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["admin", "hospitals"] });
+      qc.invalidateQueries({ queryKey: adminKeys.stats() });
+    },
+    ...opts,
+  });
+}
+
+// ── Create hospital ────────────────────────────────────────────────────
+
+export function useCreateHospital(
+  opts?: Partial<
+    UseMutationOptions<
+      { id: number; name: string },
+      ApiError,
+      HospitalCreatePayload
+    >
+  >,
+) {
+  const token = useToken();
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (payload) => createHospital(payload, token),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["admin", "hospitals"] });
       qc.invalidateQueries({ queryKey: adminKeys.stats() });

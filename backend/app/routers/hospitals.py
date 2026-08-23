@@ -23,7 +23,7 @@ router = APIRouter(
 )
 
 
-# ──────────────────────────── Dependencies ────────────────────────────
+# Dependencies
 
 
 def get_db():
@@ -39,7 +39,7 @@ def get_db():
 # to POST/PATCH/DELETE — the dependency lives in `main.py`.
 
 
-# ──────────────────────────── Helpers ────────────────────────────
+# Helpers
 
 
 _BED_TYPES = ("icu", "nicu", "ccu", "hdu")
@@ -119,7 +119,7 @@ def _to_out(h: Hospital) -> HospitalOut:
     )
 
 
-# ──────────────────────────── Endpoints ────────────────────────────
+#  Endpoints
 
 
 @router.get("", response_model=HospitalsListResponse)

@@ -1,4 +1,6 @@
 """
+Public router — /api/public/*
+
 No authentication. Anyone can read these endpoints.
 """
 
@@ -36,11 +38,44 @@ from ..services.geo_service import (
     filter_by_radius,
     haversine_km,
     in_bounding_box,
+    is_stale,
 )
 from ..services.serializers import hospital_to_summary
 
 
 router = APIRouter(prefix="/api/public", tags=["public"])
+
+
+# ── Featured hospitals (landing page) ─────────────────────────────────
+
+
+@router.get("/hospitals/featured", response_model=List[HospitalSummaryOut])
+async def featured_hospitals(
+    db: AsyncSession = Depends(get_db),
+    limit: int = Query(12, ge=1, le=50, description="Max featured hospitals to return"),
+) -> List[HospitalSummaryOut]:
+    """Return the curated featured hospitals for the landing page.
+
+    Filters to verified+active rows with ``is_featured = true``. Sorted
+    by ``updated_at`` desc so a recently-edited featured hospital surfaces
+    before a stale one; ties broken by id for stability.
+    """
+    result = await db.execute(
+        select(Hospital)
+        .where(
+            Hospital.is_featured.is_(True),
+            Hospital.is_verified.is_(True),
+            Hospital.is_active.is_(True),
+        )
+        .options(
+            selectinload(Hospital.bed_availability),
+            selectinload(Hospital.ratings),
+        )
+        .order_by(Hospital.updated_at.desc(), Hospital.id.asc())
+        .limit(limit)
+    )
+    rows = list(result.scalars().all())
+    return [hospital_to_summary(h) for h in rows]
 
 
 _STATS_CACHE_VALUE: Optional[dict] = None
@@ -198,7 +233,6 @@ async def get_hospital_public(
             selectinload(Hospital.facilities),
             selectinload(Hospital.ratings),
             selectinload(Hospital.reviews),
-            selectinload(Hospital.district),
         )
     )
     h = result.scalar_one_or_none()
@@ -209,14 +243,16 @@ async def get_hospital_public(
     last_updated = bed.last_updated if bed else None
     stale = is_stale(last_updated, settings.stale_threshold_hours)
 
-    # 7-day availability trend from UpdateHistory.
+    # 7-day availability trend from UpdateHistory. The DB query groups
+    # by day; we then materialize a length-7 array (oldest → today) so
+    # the chart on the detail page doesn't have to deal with sparse days.
     cutoff_dt = datetime.now(tz=timezone.utc).replace(microsecond=0)
     cutoff = cutoff_dt.timestamp() - 7 * 24 * 3600
     trend_rows = (
         await db.execute(
             select(
                 func.date_trunc("day", UpdateHistory.created_at).label("day"),
-                func.count(UpdateHistory.id),
+                func.count(UpdateHistory.id).label("count"),
             )
             .where(
                 UpdateHistory.hospital_id == h.id,
@@ -226,6 +262,26 @@ async def get_hospital_public(
             .order_by("day")
         )
     ).all()
+
+    # Materialize a dense 7-day array. Today appears last.
+    today_utc = datetime.now(tz=timezone.utc).date()
+    bucket_by_date: dict[str, int] = {}
+    for row in trend_rows:
+        day = row.day
+        if hasattr(day, "date"):
+            iso = day.date().isoformat()
+        else:
+            iso = str(day)[:10]
+        bucket_by_date[iso] = int(row.count)
+    availability_trend = [
+        {
+            "date": (today_utc.fromordinal(today_utc.toordinal() - (6 - i))).isoformat(),
+            "count": bucket_by_date.get(
+                (today_utc.fromordinal(today_utc.toordinal() - (6 - i))).isoformat(), 0
+            ),
+        }
+        for i in range(7)
+    ]
 
     return HospitalOut(
         id=h.id,
@@ -266,11 +322,11 @@ async def get_hospital_public(
         last_updated=last_updated,
         is_stale=stale,
         availability_color=availability_color(
-            available=bed.icu_available if bed else 0,
-            total=bed.icu_total if bed else 0,
+            bed_row=bed,
             last_updated=last_updated,
             stale_hours=settings.stale_threshold_hours,
         ),
+        availability_trend=availability_trend,
     )
 
 

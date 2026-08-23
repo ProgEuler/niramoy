@@ -94,25 +94,6 @@ export default function MapPage() {
             )}
           </div>
           <div className="flex items-center gap-2">
-            {/* View toggle */}
-            <div
-              role="group"
-              aria-label="View mode"
-              className="inline-flex h-7 items-center rounded-md border bg-card p-0.5 shadow-sm"
-            >
-              <ToggleButton
-                active={viewMode === "marker"}
-                onClick={() => setViewMode("marker")}
-                icon={<IconLayout2 className="size-3.5" />}
-                label="Markers"
-              />
-              <ToggleButton
-                active={viewMode === "heatmap"}
-                onClick={() => setViewMode("heatmap")}
-                icon={<IconLayoutGrid className="size-3.5" />}
-                label="Heatmap"
-              />
-            </div>
 
             {/* Sidebar toggle (desktop only) */}
             <Button
@@ -141,7 +122,6 @@ export default function MapPage() {
 
           {/* Map canvas */}
           <div className="relative min-w-0 flex-1">
-            {viewMode === "marker" ? (
               <HospitalMap
                 hospitals={filtered}
                 hoveredId={state.hoveredId}
@@ -150,14 +130,6 @@ export default function MapPage() {
                 onPointClick={(h) => handleSelect(h.id)}
                 dispatch={dispatch}
               />
-            ) : (
-              <HeatmapCanvas
-                hospitalCount={filtered.length}
-                highlightDivision={
-                  state.division !== "all" ? state.division : null
-                }
-              />
-            )}
 
             {/* Mobile filter FAB */}
             <div className="absolute bottom-4 left-4 z-30 lg:hidden">
@@ -289,33 +261,6 @@ function ToggleButton({
       {icon}
       <span className="hidden sm:inline">{label}</span>
     </Button>
-  )
-}
-
-function HeatmapCanvas({
-  hospitalCount,
-  highlightDivision,
-}: {
-  hospitalCount: number
-  highlightDivision: import("@/lib/types/hospital").BangladeshDivision | null
-}) {
-  return (
-    <div className="relative h-full w-full overflow-hidden bg-sky-50 dark:bg-slate-900">
-      {/* Soft gradient backdrop so the choropleth reads even with no data. */}
-      <div
-        aria-hidden
-        className="absolute inset-0 bg-gradient-to-br from-sky-100 via-sky-50 to-emerald-50 dark:from-slate-900 dark:via-slate-900 dark:to-slate-800"
-      />
-      <AvailabilityHeatmap highlightDivision={highlightDivision} />
-      <div className="absolute bottom-3 left-3 rounded-md border bg-card/90 px-3 py-2 text-[11px] shadow-sm backdrop-blur">
-        <div className="font-semibold text-foreground">
-          {hospitalCount} hospitals · district heatmap
-        </div>
-        <div className="text-muted-foreground">
-          Color shows aggregate ICU availability per division.
-        </div>
-      </div>
-    </div>
   )
 }
 

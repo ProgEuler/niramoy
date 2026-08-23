@@ -82,18 +82,6 @@ export function NoResultsState({ state, dispatch }: Props) {
           }}
         />
       </ul>
-
-      <Link href="/ambulance" className="mt-2">
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="gap-1.5 border-destructive/30 bg-destructive/5 text-destructive hover:bg-destructive/10 hover:text-destructive"
-        >
-          <IconAmbulance className="size-4" />
-          Open Ambulance Directory
-        </Button>
-      </Link>
     </div>
   )
 }

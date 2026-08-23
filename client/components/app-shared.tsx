@@ -64,12 +64,17 @@ export const navConfigByRole: Record<UserRole | "default", SidebarNavGroup[]> = 
 			label: "Overview",
 			items: [
 				{
-					title: "Platform overview",
+					title: "Overview",
 					path: "/admin",
 					icon: <IconLayoutGrid />,
 				},
 				{
-					title: "Pending approval",
+					title: "Hospitals",
+					path: "/admin/hospitals",
+					icon: <IconBuildingHospital />,
+				},
+				{
+					title: "Pending registrations",
 					path: "/admin/pending",
 					icon: <IconShieldCheck />,
 				},
@@ -81,32 +86,17 @@ export const navConfigByRole: Record<UserRole | "default", SidebarNavGroup[]> = 
 			],
 		},
 		{
-			label: "Network",
-			items: [
-				{
-					title: "Hospitals",
-					path: "/admin/hospitals",
-					icon: <IconBuildingHospital />,
-				},
-				{
-					title: "Reports",
-					path: "/admin/reports",
-					icon: <IconChartBar />,
-				},
-				{
-					title: "Reviews",
-					path: "/admin/reviews",
-					icon: <IconDatabase />,
-				},
-			],
-		},
-		{
-			label: "Administration",
+			label: "Platform",
 			items: [
 				{
 					title: "Users",
 					path: "/admin/users",
 					icon: <IconUsers />,
+				},
+				{
+					title: "Reports",
+					path: "/admin/reports",
+					icon: <IconChartBar />,
 				},
 				{
 					title: "Reference data",
@@ -149,11 +139,6 @@ export const navConfigByRole: Record<UserRole | "default", SidebarNavGroup[]> = 
 					title: "Update history",
 					path: "/management/history",
 					icon: <IconHistory />,
-				},
-				{
-					title: "Public preview",
-					path: "/management/preview",
-					icon: <IconStethoscope />,
 				},
 			],
 		},

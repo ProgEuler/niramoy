@@ -14,9 +14,8 @@
  *   - Date range (from / to) — inclusive of the day
  *   - Type — multi-select chips
  *
- * Actions:
- *   - Export CSV (filtered rows)
- *   - Page through 10 rows at a time
+ * CSV export is provided by `<AgTable>`'s built-in cell-click → date-range
+ * dialog (no hand-rolled exporter needed).
  *
  * Synthetic data is deterministic per hospital id (xmur3 hash + mulberry32
  * PRNG) so the audit trail looks believable without a backend.
@@ -25,17 +24,21 @@
 import { useMemo, useState } from "react";
 import {
   IconCalendar,
-  IconChevronLeft,
-  IconChevronRight,
   IconClipboardList,
-  IconDownload,
   IconFilter,
   IconX,
 } from "@tabler/icons-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { useToasts } from "@/components/ui/toast";
+import { AgTable } from "@/components/ag-grid/ag-table";
+import type { AgCellRenderer } from "@/components/ag-grid/type";
+import type { ColDef } from "ag-grid-community";
+import {
+  BadgePill,
+  DiffCell,
+  WhenCell,
+} from "@/components/ag-grid/ag-table-cells";
 import type { Hospital } from "@/lib/types/hospital";
 
 interface Props {
@@ -58,14 +61,13 @@ type AuditType = (typeof TYPES)[number];
 
 const PAGE_SIZE = 10;
 
-const TYPE_BADGE: Record<AuditType, string> = {
-  "Bed Counts": "bg-niramoy-teal/10 text-niramoy-teal",
-  Pricing: "bg-amber-500/10 text-amber-700 dark:text-amber-400",
-  Profile: "bg-blue-500/10 text-blue-700 dark:text-blue-400",
+const TYPE_BADGE_VARIANT: Record<AuditType, "teal" | "amber" | "blue"> = {
+  "Bed Counts": "teal",
+  Pricing: "amber",
+  Profile: "blue",
 };
 
 export function UpdateHistory({ hospital }: Props) {
-  const { pushToast } = useToasts();
   const entries = useMemo(() => seedAudit(hospital.id), [hospital.id]);
 
   // Filters
@@ -74,9 +76,6 @@ export function UpdateHistory({ hospital }: Props) {
   const [activeTypes, setActiveTypes] = useState<Set<AuditType>>(
     () => new Set(AuditTypes()),
   );
-
-  // Pagination
-  const [page, setPage] = useState(1);
 
   const filtered = useMemo(() => {
     const fromTs = from ? new Date(`${from}T00:00:00`).getTime() : -Infinity;
@@ -89,15 +88,7 @@ export function UpdateHistory({ hospital }: Props) {
     });
   }, [entries, from, to, activeTypes]);
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
-  const safePage = Math.min(page, totalPages);
-  const slice = filtered.slice(
-    (safePage - 1) * PAGE_SIZE,
-    safePage * PAGE_SIZE,
-  );
-
   function toggleType(t: AuditType) {
-    setPage(1);
     setActiveTypes((prev) => {
       const next = new Set(prev);
       if (next.has(t)) {
@@ -114,50 +105,58 @@ export function UpdateHistory({ hospital }: Props) {
     setFrom("");
     setTo("");
     setActiveTypes(new Set(AuditTypes()));
-    setPage(1);
-  }
-
-  function handleExport() {
-    if (filtered.length === 0) {
-      pushToast({
-        title: "Nothing to export",
-        description: "No rows match the current filters.",
-        variant: "info",
-      });
-      return;
-    }
-    const header = ["Type", "Field", "From", "To", "When (ISO)", "Who"];
-    const rows = filtered.map((e) =>
-      [
-        e.type,
-        e.field,
-        `"${e.from.replace(/"/g, '""')}"`,
-        `"${e.to.replace(/"/g, '""')}"`,
-        e.at,
-        e.by,
-      ].join(","),
-    );
-    const csv = [header.join(","), ...rows].join("\n");
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `${hospital.id}-audit-log.csv`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    URL.revokeObjectURL(url);
-    pushToast({
-      title: "Audit log exported",
-      description: `${filtered.length} rows written to CSV.`,
-      variant: "success",
-    });
   }
 
   const filtersDirty =
-    from !== "" ||
-    to !== "" ||
-    activeTypes.size !== AuditTypes().length;
+    from !== "" || to !== "" || activeTypes.size !== AuditTypes().length;
+
+  const columnDefs: ColDef<AuditEntry>[] = [
+    {
+      headerName: "Type",
+      field: "type",
+      flex: 0.9,
+      minWidth: 110,
+      cellRenderer: "auditType",
+    },
+    {
+      headerName: "Field",
+      field: "field",
+      flex: 1.2,
+      minWidth: 160,
+      cellRenderer: (params: { data?: AuditEntry }) => {
+        if (!params.data) return null;
+        return <span className="font-medium text-foreground">{params.data.field}</span>;
+      },
+    },
+    {
+      headerName: "Change",
+      flex: 1.5,
+      minWidth: 220,
+      sortable: false,
+      filter: false,
+      cellRenderer: (params: { data?: AuditEntry }) => {
+        if (!params.data) return null;
+        return <DiffCell from={params.data.from} to={params.data.to} />;
+      },
+    },
+    {
+      headerName: "When",
+      field: "at",
+      flex: 1.4,
+      minWidth: 180,
+      cellRenderer: "when",
+    },
+    {
+      headerName: "By",
+      field: "by",
+      flex: 0.8,
+      minWidth: 120,
+      cellRenderer: (params: { data?: AuditEntry }) => {
+        if (!params.data) return null;
+        return <span className="text-muted-foreground">{params.data.by}</span>;
+      },
+    },
+  ];
 
   return (
     <div className="space-y-4">
@@ -171,19 +170,9 @@ export function UpdateHistory({ hospital }: Props) {
               </h2>
               <p className="text-[11px] text-muted-foreground">
                 Every change made to this hospital, in reverse chronological
-                order. Use the filters to narrow it down, or export a CSV.
+                order. Click any cell to export a date-range CSV.
               </p>
             </div>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={handleExport}
-              className="h-8 gap-1.5"
-            >
-              <IconDownload className="size-3.5" />
-              Export CSV
-            </Button>
           </div>
 
           <div className="grid gap-3 sm:grid-cols-[1fr_1fr_auto]">
@@ -191,19 +180,13 @@ export function UpdateHistory({ hospital }: Props) {
               id="from"
               label="From"
               value={from}
-              onChange={(v) => {
-                setFrom(v);
-                setPage(1);
-              }}
+              onChange={setFrom}
             />
             <DateField
               id="to"
               label="To"
               value={to}
-              onChange={(v) => {
-                setTo(v);
-                setPage(1);
-              }}
+              onChange={setTo}
             />
             <div className="flex items-end">
               <Button
@@ -249,76 +232,27 @@ export function UpdateHistory({ hospital }: Props) {
         </CardContent>
       </Card>
 
-      <Card>
         <CardContent className="p-0">
-          {filtered.length === 0 ? (
-            <div className="flex flex-col items-center justify-center gap-1 px-4 py-12 text-center text-xs text-muted-foreground">
-              <IconClipboardList className="size-6 opacity-40" />
-              <p className="font-medium">No matching changes</p>
-              <p>Try widening the date range or re-enabling a type.</p>
-            </div>
-          ) : (
-            <>
-              <div className="overflow-x-auto">
-                <table className="w-full text-xs">
-                  <thead className="bg-muted/40 text-[10px] uppercase tracking-wider text-muted-foreground">
-                    <tr>
-                      <th className="px-3 py-2 text-left font-medium">Type</th>
-                      <th className="px-3 py-2 text-left font-medium">Field</th>
-                      <th className="px-3 py-2 text-left font-medium">Change</th>
-                      <th className="px-3 py-2 text-left font-medium">When</th>
-                      <th className="px-3 py-2 text-left font-medium">By</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {slice.map((e) => (
-                      <tr
-                        key={e.id}
-                        className="border-t bg-card transition-colors hover:bg-muted/30"
-                      >
-                        <td className="px-3 py-2">
-                          <span
-                            className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold ${TYPE_BADGE[e.type]}`}
-                          >
-                            {e.type}
-                          </span>
-                        </td>
-                        <td className="px-3 py-2 font-medium text-foreground">
-                          {e.field}
-                        </td>
-                        <td className="px-3 py-2 tabular-nums">
-                          <span className="text-muted-foreground line-through">
-                            {e.from}
-                          </span>
-                          <span className="mx-1 text-muted-foreground">→</span>
-                          <span className="font-semibold text-foreground">
-                            {e.to}
-                          </span>
-                        </td>
-                        <td className="px-3 py-2 text-muted-foreground">
-                          <span className="tabular-nums">{formatDateTime(e.at)}</span>
-                          <span className="ml-1 text-[10px]">
-                            ({relativeFromNow(e.at)})
-                          </span>
-                        </td>
-                        <td className="px-3 py-2 text-muted-foreground">{e.by}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-
-              <Pagination
-                page={safePage}
-                totalPages={totalPages}
-                onChange={setPage}
-                total={filtered.length}
-              />
-            </>
-          )}
+          <AgTable<AuditEntry>
+            rowData={filtered}
+            columnDefs={columnDefs}
+            components={{
+              auditType: AuditTypeCell as unknown as AgCellRenderer<AuditEntry>,
+              when: WhenCell as unknown as AgCellRenderer<AuditEntry>,
+            }}
+            pagination
+            pageSize={PAGE_SIZE}
+            height="auto"
+            noRowsText="No matching changes"
+          />
         </CardContent>
-      </Card>
     </div>
+  );
+}
+
+function AuditTypeCell({ row }: { row: AuditEntry }) {
+  return (
+    <BadgePill variant={TYPE_BADGE_VARIANT[row.type]}>{row.type}</BadgePill>
   );
 }
 
@@ -349,54 +283,6 @@ function DateField({
         value={value}
         onChange={(e) => onChange(e.target.value)}
       />
-    </div>
-  );
-}
-
-function Pagination({
-  page,
-  totalPages,
-  onChange,
-  total,
-}: {
-  page: number;
-  totalPages: number;
-  onChange: (p: number) => void;
-  total: number;
-}) {
-  const from = (page - 1) * PAGE_SIZE + 1;
-  const to = Math.min(page * PAGE_SIZE, total);
-  return (
-    <div className="flex items-center justify-between gap-2 border-t px-3 py-2 text-[11px] text-muted-foreground">
-      <span>
-        Showing <span className="font-medium text-foreground">{from}–{to}</span> of{" "}
-        <span className="font-medium text-foreground">{total}</span>
-      </span>
-      <div className="flex items-center gap-1">
-        <Button
-          type="button"
-          variant="outline"
-          size="icon-sm"
-          onClick={() => onChange(Math.max(1, page - 1))}
-          disabled={page === 1}
-          aria-label="Previous page"
-        >
-          <IconChevronLeft className="size-3.5" />
-        </Button>
-        <span className="px-2 tabular-nums">
-          Page <span className="font-medium text-foreground">{page}</span> / {totalPages}
-        </span>
-        <Button
-          type="button"
-          variant="outline"
-          size="icon-sm"
-          onClick={() => onChange(Math.min(totalPages, page + 1))}
-          disabled={page === totalPages}
-          aria-label="Next page"
-        >
-          <IconChevronRight className="size-3.5" />
-        </Button>
-      </div>
     </div>
   );
 }
@@ -504,25 +390,4 @@ function synthesizeDiff(
     return { from: "12 Old Rd", to: "12/C New Ave" };
   }
   return { from: "—", to: "Updated" };
-}
-
-function formatDateTime(iso: string): string {
-  const d = new Date(iso);
-  // YYYY-MM-DD HH:mm in local time
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
-}
-
-function relativeFromNow(iso: string): string {
-  const diffMs = Date.now() - new Date(iso).getTime();
-  const sec = Math.floor(diffMs / 1000);
-  if (sec < 60) return `${sec}s ago`;
-  const min = Math.floor(sec / 60);
-  if (min < 60) return `${min}m ago`;
-  const hr = Math.floor(min / 60);
-  if (hr < 24) return `${hr}h ago`;
-  const days = Math.floor(hr / 24);
-  if (days < 30) return `${days}d ago`;
-  const months = Math.floor(days / 30);
-  return `${months}mo ago`;
 }

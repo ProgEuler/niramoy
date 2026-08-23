@@ -9,6 +9,10 @@
 import Link from "next/link";
 import { IconArrowRight } from "@tabler/icons-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { AgTable } from "@/components/ag-grid/ag-table";
+import type { AgCellRenderer } from "@/components/ag-grid/type";
+import type { ColDef } from "ag-grid-community";
+import { BadgePill, DiffCell } from "@/components/ag-grid/ag-table-cells";
 import type { Hospital } from "@/lib/types/hospital";
 
 interface Update {
@@ -20,10 +24,10 @@ interface Update {
   at: string;
 }
 
-const TYPE_BADGE: Record<Update["type"], string> = {
-  "Bed Counts": "bg-niramoy-teal/10 text-niramoy-teal",
-  Pricing: "bg-amber-500/10 text-amber-700 dark:text-amber-400",
-  Profile: "bg-blue-500/10 text-blue-700 dark:text-blue-400",
+const TYPE_BADGE_VARIANT: Record<Update["type"], "teal" | "amber" | "blue"> = {
+  "Bed Counts": "teal",
+  Pricing: "amber",
+  Profile: "blue",
 };
 
 interface Props {
@@ -35,8 +39,53 @@ export function RecentUpdateLog({ hospital }: Props) {
   // activity trail even though real audit data is not seeded yet.
   const log = seedLog(hospital.id);
 
+  const columnDefs: ColDef<Update>[] = [
+    {
+      headerName: "Type",
+      field: "type",
+      flex: 0.9,
+      minWidth: 110,
+      cellRenderer: "typeBadge",
+    },
+    {
+      headerName: "Field",
+      field: "field",
+      flex: 1.2,
+      minWidth: 140,
+      cellRenderer: (params: { data?: Update }) => {
+        if (!params.data) return null;
+        return <span className="font-medium text-foreground">{params.data.field}</span>;
+      },
+    },
+    {
+      headerName: "Change",
+      flex: 1.4,
+      minWidth: 180,
+      sortable: false,
+      filter: false,
+      cellRenderer: (params: { data?: Update }) => {
+        if (!params.data) return null;
+        return (
+          <DiffCell
+            from={String(params.data.from)}
+            to={String(params.data.to)}
+          />
+        );
+      },
+    },
+    {
+      headerName: "When",
+      field: "at",
+      flex: 0.9,
+      minWidth: 110,
+      cellRenderer: (params: { data?: Update }) => {
+        if (!params.data) return null;
+        return <span className="text-muted-foreground">{params.data.at}</span>;
+      },
+    },
+  ];
+
   return (
-    <Card>
       <CardContent className="space-y-3 p-4">
         <div className="flex items-baseline justify-between">
           <div>
@@ -48,7 +97,7 @@ export function RecentUpdateLog({ hospital }: Props) {
             </p>
           </div>
           <Link
-            href="/admin/hospital/history"
+            href="/management/history"
             className="inline-flex items-center gap-0.5 text-[11px] font-medium text-niramoy-teal hover:underline"
           >
             View Full History
@@ -56,51 +105,23 @@ export function RecentUpdateLog({ hospital }: Props) {
           </Link>
         </div>
 
-        <div className="overflow-x-auto rounded-md border">
-          <table className="w-full text-xs">
-            <thead className="bg-muted/40 text-[10px] uppercase tracking-wider text-muted-foreground">
-              <tr>
-                <th className="px-3 py-1.5 text-left font-medium">Type</th>
-                <th className="px-3 py-1.5 text-left font-medium">Field</th>
-                <th className="px-3 py-1.5 text-left font-medium">Change</th>
-                <th className="px-3 py-1.5 text-left font-medium">When</th>
-              </tr>
-            </thead>
-            <tbody>
-              {log.map((u) => (
-                <tr
-                  key={u.id}
-                  className="border-t bg-card transition-colors hover:bg-muted/30"
-                >
-                  <td className="px-3 py-1.5">
-                    <span
-                      className={`inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold ${TYPE_BADGE[u.type]}`}
-                    >
-                      {u.type}
-                    </span>
-                  </td>
-                  <td className="px-3 py-1.5 font-medium text-foreground">
-                    {u.field}
-                  </td>
-                  <td className="px-3 py-1.5 tabular-nums">
-                    <span className="text-muted-foreground line-through">
-                      {u.from}
-                    </span>
-                    <span className="mx-1 text-muted-foreground">→</span>
-                    <span className="font-semibold text-foreground">
-                      {u.to}
-                    </span>
-                  </td>
-                  <td className="px-3 py-1.5 text-muted-foreground">
-                    {u.at}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <AgTable<Update>
+          rowData={log}
+          columnDefs={columnDefs}
+          components={{
+            typeBadge: RecentTypeCell as unknown as AgCellRenderer<Update>,
+          }}
+          pagination={false}
+          height="auto"
+          noRowsText="No recent updates"
+        />
       </CardContent>
-    </Card>
+  );
+}
+
+function RecentTypeCell({ row }: { row: Update }) {
+  return (
+    <BadgePill variant={TYPE_BADGE_VARIANT[row.type]}>{row.type}</BadgePill>
   );
 }
 

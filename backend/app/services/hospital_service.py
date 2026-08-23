@@ -1,7 +1,3 @@
-"""
-Hospital service — registration, profile edits, admin management.
-"""
-
 from __future__ import annotations
 
 from typing import List, Optional
@@ -314,9 +310,15 @@ async def update_hospital_profile(
             old_value=old,
             new_value=new,
         )
-        setattr(hospital, field, new)
+        # Latitude/longitude are stored as Float columns — the change
+        # tuple above stringifies them for the history log, so cast
+        # back to float before assigning to avoid writing a string
+        # into a numeric column (which silently no-ops on commit).
         if field in ("latitude", "longitude"):
+            setattr(hospital, field, float(new))
             coords_changed = True
+        else:
+            setattr(hospital, field, new)
 
     if coords_changed:
         hospital.geocoded_at = _now()
