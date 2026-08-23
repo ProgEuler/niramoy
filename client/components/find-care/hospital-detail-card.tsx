@@ -196,12 +196,8 @@ export function HospitalDetailCard({
         </div>
 
         {/* Footer meta: rating, last updated, price summary */}
-        <div className="flex flex-wrap items-center justify-between gap-2 border-t pt-2 text-[11px] text-muted-foreground">
-          <RatingStars value={rating} />
-          <span className="flex items-center gap-1">
-            <IconClock className="size-3" />
-            {formatRelativeTime(hospital.last_updated)}
-          </span>
+        <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] text-muted-foreground">
+         <div></div>
           <span className="tabular-nums">
             <span className="font-medium text-foreground">{priceLabel}</span>{" "}
             <span className="text-muted-foreground">/ day</span>
