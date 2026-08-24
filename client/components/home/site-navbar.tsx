@@ -1,12 +1,15 @@
 "use client"
 
 import Link from "next/link"
-import { useState } from "react"
+import { useState, useSyncExternalStore } from "react"
+import { useTheme } from "next-themes"
 import {
   IconLayoutDashboard,
   IconLanguage,
   IconMenu2,
+  IconMoon,
   IconShieldCog,
+  IconSun,
   IconX,
 } from "@tabler/icons-react"
 import { Button } from "@/components/ui/button"
@@ -77,6 +80,8 @@ export function SiteNavbar() {
 
         {/* Right cluster */}
         <div className="flex items-center gap-2">
+          <ThemeToggle />
+
           {dashboardHref ? (
             <Button
               asChild
@@ -190,5 +195,53 @@ export function SiteNavbar() {
         </nav>
       )}
     </header>
+  )
+}
+
+/**
+ * Light/dark theme toggle. Reads from `next-themes` (provided at the root
+ * layout) and flips between "light" and "dark". Uses `useSyncExternalStore`
+ * to subscribe to theme changes — gives a stable pre-hydration value, so
+ * SSR + first client paint stay identical with no setState-in-effect lint
+ * warning.
+ */
+function ThemeToggle() {
+  const { resolvedTheme, setTheme } = useTheme()
+
+  const mounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  )
+
+  const isDark = mounted && resolvedTheme === "dark"
+  const nextTheme = isDark ? "light" : "dark"
+  const label = isDark ? "Switch to light mode" : "Switch to dark mode"
+
+  return (
+    <Button
+      type="button"
+      variant="ghost"
+      size="icon"
+      aria-label={label}
+      title={`${label} (D)`}
+      onClick={() => setTheme(nextTheme)}
+      suppressHydrationWarning
+    >
+      {/* Render both icons; CSS hides the inactive one so the layout
+          doesn't shift between server and client. */}
+      <IconSun
+        className={cn(
+          "size-4 transition-all",
+          isDark ? "scale-100 rotate-0" : "hidden",
+        )}
+      />
+      <IconMoon
+        className={cn(
+          "size-4 transition-all",
+          isDark ? "hidden" : "scale-100 rotate-0",
+        )}
+      />
+    </Button>
   )
 }
