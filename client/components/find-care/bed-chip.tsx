@@ -37,8 +37,8 @@ export function BedChip({ hospital, type, density = "default", className }: Prop
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1 whitespace-nowrap",
-        compact ? "text-[11px]" : "text-xs",
+        "inline-flex items-center gap-1.5 whitespace-nowrap",
+        compact ? "text-sm" : "text-xs",
         className,
       )}
     >

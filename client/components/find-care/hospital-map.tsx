@@ -141,8 +141,8 @@ export function HospitalMap({
           closeOnClick={false}
           focusAfterOpen={false}
           closeButton
-          offset={18}
-          className="w-72"
+          offset={20}
+          className="w-[22rem] sm:w-[24rem]"
         >
           <MapPopupContent hospital={selectedHospital} />
         </MapPopup>
