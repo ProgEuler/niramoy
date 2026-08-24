@@ -1,14 +1,8 @@
 "use client";
 
-/**
- * Global providers — TanStack Query's QueryClient lives here. Mounted once
- * at the root of the app.
- */
-
 import { useState, type ReactNode } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-
-import { AppProgressBar as ProgressBar } from 'next-nprogress-bar';
+import NextTopLoader from "nextjs-toploader";
 
 export function Providers({ children }: { children: ReactNode }) {
   const [queryClient] = useState(
@@ -37,11 +31,15 @@ export function Providers({ children }: { children: ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
       {children}
-      <ProgressBar
-        height="4px"
-        color="#0066FF" // adjust color as needed to match the theme
-        options={{ showSpinner: false }}
-        shallowRouting
+      <NextTopLoader
+        color="#0e9e8e"
+        height={3}
+        showSpinner={false}
+        speed={200}
+        crawlSpeed={200}
+        easing="ease"
+        shadow="0 0 10px #0e9e8e, 0 0 5px #0e9e8e"
+        zIndex={1600}
       />
     </QueryClientProvider>
   );
